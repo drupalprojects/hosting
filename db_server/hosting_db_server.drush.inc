@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 function drush_hosting_db_server_pre_hosting_task($task) {
   $task =& drush_get_context('HOSTING_TASK');

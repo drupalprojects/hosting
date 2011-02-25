@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 function drush_hosting_alias_pre_hosting_task() {
   if (module_exists('hosting_alias')) {

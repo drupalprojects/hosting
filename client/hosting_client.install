@@ -1,5 +1,4 @@
 <?php
-// $Id$
 function hosting_client_install() {
   switch ($GLOBALS['db_type']) {
     case 'mysql' :

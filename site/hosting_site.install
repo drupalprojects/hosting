@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 function hosting_site_install() {
   switch ($GLOBALS['db_type']) {

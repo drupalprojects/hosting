@@ -1,5 +1,4 @@
 <?php
-// $Id$
 function hosting_alias_install() {
   switch ($GLOBALS['db_type']) {
     case 'mysql' :
