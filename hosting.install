@@ -1,5 +1,4 @@
 <?php
-// $Id$ 
 
 function hosting_install() {
   db_query("UPDATE {system} SET weight = 10 WHERE type='module' and name='hosting'");

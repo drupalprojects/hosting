@@ -1,6 +1,5 @@
 <?php
 
-// $Id$
 
 /**
  * Map values of site node into command line arguments
