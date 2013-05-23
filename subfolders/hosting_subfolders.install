@@ -1,0 +1,47 @@
+<?php
+/**
+ * Implementation of hook_schema().
+ */
+function hosting_subfolders_schema() {
+  $schema['hosting_subfolders'] = array(
+    'fields' => array(
+      'vid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'subfolder_path' => array(
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+      ),
+    ),
+    'indexes' => array(
+      'vid' => array('vid'),
+      'subfolder' => array('subfolder_path'),
+    ),
+  );
+  return $schema;
+}
+
+/**
+ * Implementation of hook_install()
+ */
+function hosting_subfolders_install() {
+  // Create tables.
+  drupal_install_schema('hosting_subfolders');
+}
+
+/**
+ * Implementation of hook_uninstall()
+ */
+function hosting_subfolders_uninstall() {
+  // Remove tables.
+  drupal_uninstall_schema('hosting_subfolders');
+}

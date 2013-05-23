@@ -1,0 +1,105 @@
+<?php
+
+/**
+ * Implementation of hook_form_alter().
+ *
+ * Add a simple form element to specify the subfolder.
+ */
+function hosting_subfolders_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'site_node_form') {
+    $form['subfolder_path'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Subfolder path'),
+      '#required' => FALSE,
+      '#description' => t('The "subfolder" alias that will be used to view the site under a common, non-Aegir-managed URL'),
+      '#default_value' => $form['#node']->subfolder_path ? $form['#node']->subfolder_path : '', 
+    );
+    return($form);
+  }
+}
+
+/**
+ * Detect whether the specified path is valid or in use already
+ */
+function hosting_subfolders_valid_path($nid, $path) {
+  $query = "SELECT COUNT(s.nid) FROM {hosting_subfolders} s 
+    JOIN {hosting_site} h ON s.nid = h.nid
+    WHERE subfolder_path='%s' AND h.status <> %d AND s.nid <> %d";
+  $args[] = $path;
+  $args[] = HOSTING_SITE_DELETED;
+  $args[] = $nid;
+  $result = !db_result(db_query($query, $args));
+  return $result;
+}
+
+/**
+ * Implementation of hook_insert()
+ */
+function hosting_subfolders_insert($node) {
+  db_query("INSERT INTO {hosting_subfolders} (vid, nid, subfolder_path) VALUES (%d, %d, '%s')", $node->vid, $node->nid, $node->subfolder_path);
+}
+
+/**
+ * Implementation of hook_delete()
+ */
+function hosting_subfolders_delete($node) {
+  db_query("DELETE FROM {hosting_subfolders} WHERE nid=%d", $node->nid);
+}
+
+/**
+ * Implementation of hook_delete_revision()
+ */
+function hosting_subfolders_delete_revision($node) {
+  db_query("DELETE FROM {hosting_subfolders} WHERE nid=%d and vid=%d", $node->nid, $node->vid);
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function hosting_subfolders_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  if ($node->type == 'site') {
+    switch ($op) {
+      case 'validate':
+        if (isset($node->subfolder_path)) {
+          if (!hosting_subfolders_valid_path($node->nid, $node->subfolder_path)) {
+            form_set_error('subfolder_path', t('This path is in use or invalid!'));
+          }
+          if (!empty($node->subfolder_path)) {
+            if (empty($node->aliases) || !preg_match("/\." . $node->subfolder_path . "/", implode("\n", (array) $node->aliases))) {
+              form_set_error('aliases', t('You can\'t set a subfolder if you haven\'t set an alias in the format "yourdomain.com.%subfolder"', array('%subfolder' => $node->subfolder_path)));
+            }
+          }
+        }
+        break;
+      case 'update':
+        hosting_subfolders_delete_revision($node);
+      case 'insert':
+        if (isset($node->subfolder_path)) {
+          hosting_subfolders_insert($node);
+        }
+        break;
+      case 'delete':
+        hosting_subfolders_delete($node);
+        break;
+      case 'delete revision':
+        hosting_subfolders_delete_revision($node);
+        break;
+      case 'load':
+        $additions = array();
+        $additions['subfolder_path'] = db_result(db_query("SELECT subfolder_path FROM {hosting_subfolders} WHERE vid=%d", $node->vid));
+        return $additions;
+        break;
+      case 'view':
+        $path = db_result(db_query("SELECT subfolder_path FROM {hosting_subfolders} WHERE vid=%d", $node->vid));
+        if ($path) {
+          $node->content['info']['subfolder_path'] = array(
+            '#type' => 'item',
+            '#title' => t('Subfolder'),
+            '#value' => $path,
+            '#weight' => 10,
+          );
+        }
+        break;
+    }
+  }
+}

@@ -1,0 +1,7 @@
+name = Hosting subfolders
+description = A hacky way to get sites to use subfolders.
+package = Hosting
+dependencies[] = hosting
+dependencies[] = hosting_alias
+
+core = 6.x
