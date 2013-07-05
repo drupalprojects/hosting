@@ -371,3 +371,27 @@ function hosting_package_views_api() {
     'path' => drupal_get_path('module', 'hosting_package') . '/views',
   );
 }
+
+/**
+ * Return the number of sites with a package enabled.
+ *
+ * @param $package
+ *   The package nid.
+ * @param $platform
+ *   The platform nid.
+ * @param $status
+ *   The package status.
+ * @param $site_status
+ *   The site status.
+ */
+function hosting_package_count_sites($package, $platform, $status = 1, $site_status = HOSTING_SITE_ENABLED) {
+  $sql = "SELECT count(iid)
+          FROM {hosting_package_instance} pi
+          JOIN {hosting_site} site
+          ON pi.rid=site.nid
+          WHERE package_id=%d
+          AND platform=%d
+          AND pi.status=%d
+          AND site.status=%d";
+  return db_result(db_query($sql, $package, $platform, $status, $site_status));
+}

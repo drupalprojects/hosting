@@ -17,6 +17,10 @@ function hosting_package_views_handlers() {
       'views_handler_field_hosting_package_status' => array(
         'parent' => 'views_handler_field_hosting_site_status',
       ),
+      'views_handler_field_hosting_package_sites' => array(
+        'parent' => 'views_handler_field',
+      ),
+      // filter handlers
       'views_handler_filter_hosting_package_status' => array(
         'parent' => 'views_handler_filter_in_operator',
       ),
@@ -216,6 +220,16 @@ function hosting_package_views_data() {
       'handler' => 'views_handler_sort',
     ),
   );
+
+  $data['hosting_package']['sites'] = array(
+    'title' => t('Sites'),
+    'help' => t('The number of sites using this package.'),
+    'field' => array(
+      'handler' => 'views_handler_field_hosting_package_sites',
+      'click sortable' => TRUE,
+      'field' => 'nid',
+    ),
+ );
 
   return $data;
 }

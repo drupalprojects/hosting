@@ -176,6 +176,11 @@ function hosting_package_views_default_views() {
   $handler->display->display_options['fields']['package_type']['hide_empty'] = 0;
   $handler->display->display_options['fields']['package_type']['empty_zero'] = 0;
   $handler->display->display_options['fields']['package_type']['hide_alter_empty'] = 1;
+  /* Field: Hosting Package: Sites */
+  $handler->display->display_options['fields']['sites']['id'] = 'sites';
+  $handler->display->display_options['fields']['sites']['table'] = 'hosting_package';
+  $handler->display->display_options['fields']['sites']['field'] = 'sites';
+  $handler->display->display_options['fields']['sites']['relationship'] = 'package_id';
   /* Sort criterion: Hosting Package Instance: Status */
   $handler->display->display_options['sorts']['status']['id'] = 'status';
   $handler->display->display_options['sorts']['status']['table'] = 'hosting_package_instance';
@@ -673,6 +678,11 @@ function hosting_package_views_default_views() {
   $handler->display->display_options['fields']['package_type']['hide_empty'] = 0;
   $handler->display->display_options['fields']['package_type']['empty_zero'] = 0;
   $handler->display->display_options['fields']['package_type']['hide_alter_empty'] = 1;
+  /* Field: Hosting Package: Sites */
+  $handler->display->display_options['fields']['sites']['id'] = 'sites';
+  $handler->display->display_options['fields']['sites']['table'] = 'hosting_package';
+  $handler->display->display_options['fields']['sites']['field'] = 'sites';
+  $handler->display->display_options['fields']['sites']['relationship'] = 'package_id';
   $handler->display->display_options['defaults']['filters'] = FALSE;
   /* Filter: Node: Title */
   $handler->display->display_options['filters']['title']['id'] = 'title';
