@@ -1614,7 +1614,8 @@ function hosting_task_preprocess_views_view_table(&$vars) {
       drupal_add_js(drupal_get_path('module','hosting_task') . '/hosting_task.js');
 
       $settings['hostingTaskRefresh'] = array(
-        'queueBlock' => 1
+        'queueBlock' => 1,
+        'refreshRate' => variable_get('hosting_task_queue_refresh', 30),
       );
       drupal_add_js($settings, 'setting');
       break;

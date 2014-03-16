@@ -24,7 +24,7 @@ hostingTaskRefreshList = function() {
       $("#hosting-task-list").html(data.markup);
 
       hostingTaskBindButtons('#hosting-task-list');
-      setTimeout("hostingTaskRefreshList()", 30000);
+      setTimeout("hostingTaskRefreshList()", Drupal.settings.hostingTaskRefresh.refreshRate * 1000 );
     }
   }
 
@@ -47,7 +47,7 @@ hostingTaskRefreshQueueBlock = function() {
     $("#block-views-hosting-task-list-block .content").html(data.markup);
 
     hostingTaskBindButtons('#block-views-hosting-task-list-block');
-    setTimeout("hostingTaskRefreshQueueBlock()", 30000);
+    setTimeout("hostingTaskRefreshQueueBlock()", Drupal.settings.hostingTaskRefresh.refreshRate * 1000 );
   }
 
   hostingTaskAddOverlay('#block-views-hosting-task-list-block .view-content');
@@ -56,8 +56,8 @@ hostingTaskRefreshQueueBlock = function() {
 
 $(document).ready(function() {
   $(document).data('hostingOpenModalFrame', false);
-  setTimeout("hostingTaskRefreshList()", 30000);
-  setTimeout("hostingTaskRefreshQueueBlock()", 30000);
+  setTimeout("hostingTaskRefreshList()", Drupal.settings.hostingTaskRefresh.refreshRate * 1000 );
+  setTimeout("hostingTaskRefreshQueueBlock()", Drupal.settings.hostingTaskRefresh.refreshRate * 1000 );
   hostingTaskBindButtons($(this));
   $('#hosting-task-confirm-form-actions a').click(function() {
     if (parent.Drupal.modalFrame.isOpen) {
