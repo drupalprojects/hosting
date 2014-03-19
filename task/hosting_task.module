@@ -540,6 +540,7 @@ function hosting_task_retry($task_id) {
     drupal_set_message(t("The task is being retried and has been added to the hosting queue again"));
     hosting_task_log($node->vid, 'queue', t("The task is being retried and has been added to the hosting queue again"));
     $node->revision = TRUE;
+    $node->log = 'task re-queued';
     $node->changed = REQUEST_TIME;
     $node->task_status = HOSTING_TASK_QUEUED;
     node_save($node);
@@ -582,6 +583,7 @@ function hosting_add_task($nid, $type, $args = NULL, $status = HOSTING_TASK_QUEU
   $task->status = 1;
   $task->task_status = $status;
   if ($status == HOSTING_TASK_QUEUED) {
+    $task->log = 'task queued';
     $task->revision = TRUE;
   }
   #arguments, such as which backup to restore.
@@ -1097,7 +1099,7 @@ function hosting_task_view($node, $teaser = FALSE, $page = FALSE) {
  * Display table containing the logged information for this task
  */
 function _hosting_task_log_table($node, $last_position = 0) {
-  $result = db_query("SELECT * FROM {hosting_task_log} WHERE vid = :vid AND lid > :lid ORDER BY lid", array(':vid' => $node->vid, ':lid' => $last_position));
+  $result = db_query("SELECT * FROM {hosting_task_log} WHERE nid = :nid AND lid > :lid ORDER BY lid", array(':nid' => $node->nid, ':lid' => $last_position));
   if ($result) {
     $header = array('data' => 'Log message');
     $rows = array();
@@ -1668,23 +1670,15 @@ function hosting_task_preprocess_views_view_table(&$vars) {
  * @return The task's status error code.
  */
 function hosting_task_update_status($task = NULL) {
-  if (is_null($task)) {
+  if (is_null($task) || is_numeric($task)) {
     $task = drush_get_context('HOSTING_TASK');
   }
-  if (is_numeric($task)) {
-    $vid = $task;
-  }
-  else {
-    $vid = $task->vid;
-  }
+  $update = hosting_task_parse_log($task->nid);
+  $task->task_status = $update;
+  $task->log = 'task completed';
+  $task->revision = TRUE;
+  node_save($task);
 
-  $update = hosting_task_parse_log($vid);
-  db_update('hosting_task')
-  ->fields(array(
-    'task_status' => $update,
-  ))
-  ->condition('vid', $vid)
-  ->execute();
   return $update;
 }
 

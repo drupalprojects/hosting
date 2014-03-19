@@ -127,8 +127,9 @@ function drush_hosting_task() {
     $output = drush_invoke_process('@none', 'provision-save', array('@' . $task->ref->hosting_name), array('delete' => TRUE), array('method' => $mode));
   }
 
-  // New revision is created at the beginning of function.
+  // New revision is created in drush_hosting_task_validate().
   $task->revision = FALSE;
+  $task->log = 'task executed';
   $task->delta = REQUEST_TIME - $task->executed;
   node_save($task);
 }
