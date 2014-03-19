@@ -38,26 +38,55 @@ function hostingTaskAddOverlay(elem) {
 }
 
 
-hostingTaskRefreshQueueBlock = function() {
+hostingTaskRefreshQueueBlock = function(latestTimestamp, tasksOutstanding) {
+  // This function only applies to the queue block.
   if (Drupal.settings.hostingTaskRefresh.queueBlock != 1) {
     return null;
   }
 
   var hostingTaskQueueRefreshCallback = function(data, responseText) {
+    // Update the queue block content.
     $("#block-views-hosting-task-list-block .content").html(data.markup);
 
+    // Allow buttons to open modal dialogs.
     hostingTaskBindButtons('#block-views-hosting-task-list-block');
-    setTimeout("hostingTaskRefreshQueueBlock()", Drupal.settings.hostingTaskRefresh.refreshRate * 1000 );
+    // Trigger this parent function again re-using the current data.
+    setTimeout(function() { hostingTaskRefreshQueueBlock(latestTimestamp, tasksOutstanding) }, 1000 );
   }
 
-  hostingTaskAddOverlay('#block-views-hosting-task-list-block .view-content');
-  $.get(Drupal.settings.basePath + 'hosting/tasks/queue', null, hostingTaskQueueRefreshCallback , 'json');
+  var hostingTaskQueuePollCallback = function(data) {
+    // Update the polling frequency based on the latest status.
+    pollTimeout = data.outstanding ? 1000 : Drupal.settings.hostingTaskRefresh.refreshRate * 1000;
+    //debug
+    console.log(data.timestamp + ' :: ' + latestTimestamp);
+    // Refresh the queue block whenever the latest status changes.
+    if (data.timestamp > latestTimestamp) {
+      // Update the timestamp
+      // @todo: is this really req'd?
+      latestTimestamp = data.timestamp;
+      // Add throbber overlay to indicate that a refresh is in progress.
+      hostingTaskAddOverlay('#block-views-hosting-task-list-block .view-content');
+      // Request the updated queue block and pass the result to the callback for appropriate action.
+      $.get(Drupal.settings.basePath + 'hosting/tasks/queue', null, hostingTaskQueueRefreshCallback , 'json');
+    }
+    // Trigger the parent function again using the latest data.
+    setTimeout(function() { hostingTaskRefreshQueueBlock(data.timestamp, data.outstanding) }, pollTimeout );
+  }
+
+  // Poll the latest status and pass the result to the callback for appropriate action.
+  $.get(Drupal.settings.basePath + 'js/hosting_task/latest/status', null, hostingTaskQueuePollCallback, 'json');
+
 }
 
 $(document).ready(function() {
   $(document).data('hostingOpenModalFrame', false);
-  setTimeout("hostingTaskRefreshList()", Drupal.settings.hostingTaskRefresh.refreshRate * 1000 );
-  setTimeout("hostingTaskRefreshQueueBlock()", Drupal.settings.hostingTaskRefresh.refreshRate * 1000 );
+  // Initialize our polling parameters from data passed in from Drupal.
+  var latestTimestamp = Drupal.settings.hostingTaskRefresh.latestTimestamp;
+  var tasksOutstanding = Drupal.settings.hostingTaskRefresh.tasksOutstanding;
+  // Set fast polling when outstanding tasks exist, otherwise use our configured refresh rate.
+  pollTimeout = tasksOutstanding ? 1000 : Drupal.settings.hostingTaskRefresh.refreshRate * 1000;
+  setTimeout("hostingTaskRefreshList()", pollTimeout );
+  setTimeout(function() { hostingTaskRefreshQueueBlock(latestTimestamp, tasksOutstanding) }, pollTimeout );
   hostingTaskBindButtons($(this));
   $('#hosting-task-confirm-form-actions a').click(function() {
     if (parent.Drupal.modalFrame.isOpen) {
