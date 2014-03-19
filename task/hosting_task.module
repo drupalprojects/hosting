@@ -184,20 +184,17 @@ function hosting_task_ajax_queue_latest() {
 }
 
 /**
- * Return the timestamp of the most recently updated task, as well as whether
+ * Return the revision ID of the most recently updated task, as well as whether
  * any outstanding tasks are queued.
  */
 function hosting_task_queue_latest() {
   $return = array();
   $return['outstanding'] = (boolean) (hosting_task_count() + hosting_task_count_running());
-  $return['timestamp'] = db_query("SELECT GREATEST(n.created, n.changed, t.executed)
-                                       AS latest
-                                     FROM {hosting_task} t
-                               INNER JOIN {node} n
-                                       ON t.vid = n.vid
-                                 ORDER BY latest DESC
-                                    LIMIT 1"
-                                  )->fetchField();
+  $return['vid'] = db_query("SELECT vid
+                               FROM {hosting_task}
+                           ORDER BY vid DESC
+                              LIMIT 1"
+                            )->fetchField();
   return $return;
 }
 
@@ -1646,7 +1643,6 @@ function hosting_task_preprocess_views_view_table(&$vars) {
 
   switch ($id) {
     case 'hosting_task_list-block':
-      //modalframe_parent_js();
       drupal_add_js(drupal_get_path('module','hosting_task') . '/hosting_task.js');
 
       $latest = hosting_task_queue_latest();
@@ -1654,7 +1650,7 @@ function hosting_task_preprocess_views_view_table(&$vars) {
       $settings['hostingTaskRefresh'] = array(
         'queueBlock' => 1,
         'refreshRate' => variable_get('hosting_task_queue_refresh', 30),
-        'latestTimestamp' => $latest['timestamp'],
+        'latestVid' => $latest['vid'],
         'tasksOutstanding' => $latest['outstanding'],
       );
       drupal_add_js($settings, 'setting');

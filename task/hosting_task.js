@@ -38,7 +38,7 @@ function hostingTaskAddOverlay(elem) {
 }
 
 
-hostingTaskRefreshQueueBlock = function(latestTimestamp, tasksOutstanding) {
+hostingTaskRefreshQueueBlock = function(latestVid, tasksOutstanding) {
   // This function only applies to the queue block.
   if (Drupal.settings.hostingTaskRefresh.queueBlock != 1) {
     return null;
@@ -51,26 +51,28 @@ hostingTaskRefreshQueueBlock = function(latestTimestamp, tasksOutstanding) {
     // Allow buttons to open modal dialogs.
     hostingTaskBindButtons('#block-views-hosting-task-list-block');
     // Trigger this parent function again re-using the current data.
-    setTimeout(function() { hostingTaskRefreshQueueBlock(latestTimestamp, tasksOutstanding) }, 1000 );
+    setTimeout(function() { hostingTaskRefreshQueueBlock(latestVid, statusChanged) }, 1000 );
   }
 
   var hostingTaskQueuePollCallback = function(data) {
+    // Initilize a variable that will persist across calls to the parent function.
+    if (typeof(statusChanged) == 'undefined') { statusChanged = false; }
     // Update the polling frequency based on the latest status.
-    pollTimeout = data.outstanding ? 1000 : Drupal.settings.hostingTaskRefresh.refreshRate * 1000;
-    //debug
-    console.log(data.timestamp + ' :: ' + latestTimestamp);
+    pollTimeout = data.outstanding || statusChanged ? 1000 : Drupal.settings.hostingTaskRefresh.refreshRate * 1000;
+    // Keep track of when the status has changed across calls to the parent function.
+    statusChanged = data.outstanding != tasksOutstanding;
     // Refresh the queue block whenever the latest status changes.
-    if (data.timestamp > latestTimestamp) {
-      // Update the timestamp
-      // @todo: is this really req'd?
-      latestTimestamp = data.timestamp;
+    if (data.vid > latestVid) {
+      // Update the parameters
+      latestVid = data.vid;
+      tasksOutstanding = data.outstanding;
       // Add throbber overlay to indicate that a refresh is in progress.
       hostingTaskAddOverlay('#block-views-hosting-task-list-block .view-content');
       // Request the updated queue block and pass the result to the callback for appropriate action.
       $.get(Drupal.settings.basePath + 'hosting/tasks/queue', null, hostingTaskQueueRefreshCallback , 'json');
     }
-    // Trigger the parent function again using the latest data.
-    setTimeout(function() { hostingTaskRefreshQueueBlock(data.timestamp, data.outstanding) }, pollTimeout );
+    // Trigger the parent function again.
+    setTimeout(function() { hostingTaskRefreshQueueBlock(latestVid, tasksOutstanding) }, pollTimeout );
   }
 
   // Poll the latest status and pass the result to the callback for appropriate action.
@@ -81,12 +83,12 @@ hostingTaskRefreshQueueBlock = function(latestTimestamp, tasksOutstanding) {
 $(document).ready(function() {
   $(document).data('hostingOpenModalFrame', false);
   // Initialize our polling parameters from data passed in from Drupal.
-  var latestTimestamp = Drupal.settings.hostingTaskRefresh.latestTimestamp;
+  var latestVid = Drupal.settings.hostingTaskRefresh.latestVid;
   var tasksOutstanding = Drupal.settings.hostingTaskRefresh.tasksOutstanding;
   // Set fast polling when outstanding tasks exist, otherwise use our configured refresh rate.
   pollTimeout = tasksOutstanding ? 1000 : Drupal.settings.hostingTaskRefresh.refreshRate * 1000;
   setTimeout("hostingTaskRefreshList()", pollTimeout );
-  setTimeout(function() { hostingTaskRefreshQueueBlock(latestTimestamp, tasksOutstanding) }, pollTimeout );
+  setTimeout(function() { hostingTaskRefreshQueueBlock(latestVid, tasksOutstanding) }, pollTimeout );
   hostingTaskBindButtons($(this));
   $('#hosting-task-confirm-form-actions a').click(function() {
     if (parent.Drupal.modalFrame.isOpen) {
