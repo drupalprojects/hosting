@@ -105,8 +105,13 @@ function hosting_site_view(&$node, $teaser = FALSE) {
       '#suffix' => '</div>',
       '#weight' => 10,
     );
+    $latest = hosting_task_queue_status($node->nid);
     $settings['hostingTaskRefresh'] = array(
       'nid' => $node->nid,
+      'idlePollRate' => variable_get('hosting_task_queue_poll_idle', 10000),
+      'busyPollRate' => variable_get('hosting_task_queue_poll_busy', 1000),
+      'latestVid' => $latest['vid'],
+      'tasksOutstanding' => $latest['outstanding'],
       'changed' => $node->changed,
     );
     drupal_add_js($settings, array('type' => 'setting', 'scope' => JS_DEFAULT));

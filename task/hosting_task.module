@@ -71,6 +71,15 @@ function hosting_task_menu() {
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
+  $items['js/hosting_task/list_status/%'] = array(
+    'title' => 'Latest task status',
+    'description' => 'AJAX callback for polling status of node task list',
+    'page callback' => 'hosting_task_ajax_list_status',
+    'page arguments' => array(3),
+    'access callback' => TRUE,
+    'type' => MENU_CALLBACK,
+  );
+
 
  // Custom path to task node views for overlay.
   // See hosting_task_overlay_paths().
@@ -102,8 +111,12 @@ function hosting_task_js() {
     // we can use the direct callback, rather than the AJAX one, as in
     // hook_menu.
     'queue_status' => array(
-      'callback'     => 'hosting_task_queue_status',
+      'callback'   => 'hosting_task_queue_status',
     ),
+    'list_status' => array(
+      'callback'  => 'hosting_task_queue_status',
+    ),
+
   );
 }
 
@@ -201,6 +214,14 @@ function hosting_task_ajax_list($node) {
   $return['changed'] = $node->changed;
   $return['navigate_url'] = url('node/' . $node->nid);
   drupal_json_output($return);
+  exit();
+}
+
+/**
+ * AJAX callback for polling the node task list.
+ */
+function hosting_task_ajax_list_status($nid) {
+  drupal_json_output(hosting_task_queue_status($nid));
   exit();
 }
 
