@@ -229,17 +229,21 @@ function hosting_task_ajax_queue_status() {
  * Return the revision ID of the most recently updated task, as well as whether
  * any outstanding tasks are queued.
  */
-function hosting_task_queue_status() {
+function hosting_task_queue_status($nid = NULL) {
   $return = array();
-  $return['outstanding'] = (boolean) (hosting_task_count() + hosting_task_count_running());
-  $return['vid'] = db_query("SELECT vid
-                               FROM {hosting_task}
-                           ORDER BY vid DESC
-                              LIMIT 1"
-                            )->fetchField();
+  $return['outstanding'] = (boolean) (hosting_task_count($nid) + hosting_task_count_running($nid));
+
+  $sql = 'SELECT vid FROM {hosting_task} ';
+  $args = array();
+  if ($nid) {
+    $sql .= ' WHERE rid=:nid';
+    $args[':nid'] = $nid;
+  }
+  $sql .= ' ORDER BY vid DESC LIMIT 1';
+  $return['vid'] = db_query($sql, $args)->fetchField();
+
   return $return;
 }
-
 
 /**
  * @todo Please document this function
