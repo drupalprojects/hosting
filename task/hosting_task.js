@@ -58,7 +58,7 @@ hostingTaskRefreshQueueBlock = function(latestVid, tasksOutstanding) {
     // Initilize a variable that will persist across calls to the parent function.
     if (typeof(statusChanged) == 'undefined') { statusChanged = false; }
     // Update the polling frequency based on the latest status.
-    pollTimeout = data.outstanding || statusChanged ? 1000 : Drupal.settings.hostingTaskRefresh.refreshRate * 1000;
+    pollTimeout = data.outstanding || statusChanged ? Drupal.settings.hostingTaskRefresh.busyPollRate : Drupal.settings.hostingTaskRefresh.idlePollRate;
     // Keep track of when the status has changed across calls to the parent function.
     statusChanged = data.outstanding != tasksOutstanding;
     // Refresh the queue block whenever the latest status changes.
@@ -86,7 +86,7 @@ $(document).ready(function() {
   var latestVid = Drupal.settings.hostingTaskRefresh.latestVid;
   var tasksOutstanding = Drupal.settings.hostingTaskRefresh.tasksOutstanding;
   // Set fast polling when outstanding tasks exist, otherwise use our configured refresh rate.
-  pollTimeout = tasksOutstanding ? 1000 : Drupal.settings.hostingTaskRefresh.refreshRate * 1000;
+  pollTimeout = tasksOutstanding ? Drupal.settings.hostingTaskRefresh.busyPollRate : Drupal.settings.hostingTaskRefresh.idlePollRate;
   setTimeout("hostingTaskRefreshList()", pollTimeout );
   setTimeout(function() { hostingTaskRefreshQueueBlock(latestVid, tasksOutstanding) }, pollTimeout );
   hostingTaskBindButtons($(this));
