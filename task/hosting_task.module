@@ -64,10 +64,10 @@ function hosting_task_menu() {
     'type' => MENU_CALLBACK,
   );
 
-  $items['js/hosting_task/latest/status'] = array(
+  $items['js/hosting_task/queue_status'] = array(
     'title' => 'Latest task status',
-    'description' => 'AJAX callback for polling status and timestamp of latest task in queue',
-    'page callback' => 'hosting_task_ajax_queue_latest',
+    'description' => 'AJAX callback for polling status and vid of latest task in queue',
+    'page callback' => 'hosting_task_ajax_queue_status',
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
   );
@@ -88,6 +88,23 @@ function hosting_task_menu() {
   );
 
   return $items;
+}
+
+/**
+ * Implements hook_js().
+ */
+function hosting_task_js() {
+  return array(
+    // We skip access checks here since we're only returning the latest task
+    // vid and whether there are outstanding tasks, neither of which is
+    // terribly sensitive.
+    // Also, since these are automatically passed through drupal_json_output(),
+    // we can use the direct callback, rather than the AJAX one, as in
+    // hook_menu.
+    'queue_status' => array(
+      'callback'     => 'hosting_task_queue_status',
+    ),
+  );
 }
 
 /**
@@ -178,8 +195,8 @@ function hosting_task_ajax_queue() {
 /**
  * AJAX callback for polling the queue.
  */
-function hosting_task_ajax_queue_latest() {
-  drupal_json_output(hosting_task_queue_latest());
+function hosting_task_ajax_queue_status() {
+  drupal_json_output(hosting_task_queue_status());
   exit();
 }
 
@@ -187,7 +204,7 @@ function hosting_task_ajax_queue_latest() {
  * Return the revision ID of the most recently updated task, as well as whether
  * any outstanding tasks are queued.
  */
-function hosting_task_queue_latest() {
+function hosting_task_queue_status() {
   $return = array();
   $return['outstanding'] = (boolean) (hosting_task_count() + hosting_task_count_running());
   $return['vid'] = db_query("SELECT vid
@@ -1645,7 +1662,7 @@ function hosting_task_preprocess_views_view_table(&$vars) {
     case 'hosting_task_list-block':
       drupal_add_js(drupal_get_path('module','hosting_task') . '/hosting_task.js');
 
-      $latest = hosting_task_queue_latest();
+      $latest = hosting_task_queue_status();
 
       $settings['hostingTaskRefresh'] = array(
         'queueBlock' => 1,

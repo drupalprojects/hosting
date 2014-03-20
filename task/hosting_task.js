@@ -76,7 +76,7 @@ hostingTaskRefreshQueueBlock = function(latestVid, tasksOutstanding) {
   }
 
   // Poll the latest status and pass the result to the callback for appropriate action.
-  $.get(Drupal.settings.basePath + 'js/hosting_task/latest/status', null, hostingTaskQueuePollCallback, 'json');
+  $.get(Drupal.settings.basePath + 'js/hosting_task/queue_status', null, hostingTaskQueuePollCallback, 'json');
 
 }
 
