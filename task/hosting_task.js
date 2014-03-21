@@ -54,7 +54,7 @@ hostingTaskRefreshList = function(latestVid, tasksOutstanding) {
   }
 
   // Poll the latest status and pass the result to the callback for appropriate action.
-  $.get(Drupal.settings.basePath + 'js/hosting_task/list_status', null, hostingTaskListPollCallback, 'json');
+  $.get(Drupal.settings.basePath + 'js/hosting_task/list_status/' + Drupal.settings.hostingTaskRefresh.nid, null, hostingTaskListPollCallback, 'json');
 
 }
 
