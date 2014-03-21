@@ -24,9 +24,6 @@ hostingTaskRefreshList = function(latestVid, tasksOutstanding) {
     else {
       // Update the task list content.
       $("#hosting-task-list").html(data.markup);
-
-      // Allow buttons to open modal dialogs.
-      hostingTaskBindButtons('#hosting-task-list');
       // Trigger this parent function again re-using the current data.
       setTimeout(function() { hostingTaskRefreshList(latestVid, statusChanged) }, Drupal.settings.hostingTaskRefresh.busyPollRate );
     }
@@ -44,8 +41,6 @@ hostingTaskRefreshList = function(latestVid, tasksOutstanding) {
       // Update the parameters
       latestVid = data.vid;
       tasksOutstanding = data.outstanding;
-      // Add throbber overlay to indicate that a refresh is in progress.
-      hostingTaskAddOverlay('#hosting-task-list');
       // Request the updated queue block and pass the result to the callback for appropriate action.
       $.get(Drupal.settings.basePath + 'hosting/tasks/' + Drupal.settings.hostingTaskRefresh.nid + '/list', null, hostingTaskListRefreshCallback , 'json' );
     }
@@ -59,11 +54,6 @@ hostingTaskRefreshList = function(latestVid, tasksOutstanding) {
 }
 
 
-function hostingTaskAddOverlay(elem) {
-  $(elem).prepend('<div class="hosting-overlay"><div class="hosting-throbber"></div></div>');
-}
-
-
 hostingTaskRefreshQueueBlock = function(latestVid, tasksOutstanding) {
   // This function only applies to the queue block.
   if (Drupal.settings.hostingTaskRefresh.queueBlock != 1) {
@@ -73,9 +63,6 @@ hostingTaskRefreshQueueBlock = function(latestVid, tasksOutstanding) {
   var hostingTaskQueueRefreshCallback = function(data, responseText) {
     // Update the queue block content.
     $("#block-views-hosting-task-list-block .content").html(data.markup);
-
-    // Allow buttons to open modal dialogs.
-    hostingTaskBindButtons('#block-views-hosting-task-list-block');
     // Trigger this parent function again re-using the current data.
     setTimeout(function() { hostingTaskRefreshQueueBlock(latestVid, statusChanged) }, Drupal.settings.hostingTaskRefresh.busyPollRate );
   }
@@ -92,8 +79,6 @@ hostingTaskRefreshQueueBlock = function(latestVid, tasksOutstanding) {
       // Update the parameters
       latestVid = data.vid;
       tasksOutstanding = data.outstanding;
-      // Add throbber overlay to indicate that a refresh is in progress.
-      hostingTaskAddOverlay('#block-views-hosting-task-list-block .view-content');
       // Request the updated queue block and pass the result to the callback for appropriate action.
       $.get(Drupal.settings.basePath + 'hosting/tasks/queue', null, hostingTaskQueueRefreshCallback , 'json');
     }
@@ -123,14 +108,6 @@ $(document).ready(function() {
 
     hostingTaskSetTimeouts();
 
-    hostingTaskBindButtons($(this));
-    $('#hosting-task-confirm-form-actions a').click(function() {
-      if (parent.Drupal.modalFrame.isOpen) {
-        setTimeout(function() { parent.Drupal.modalFrame.close({}, {}); }, 1);
-        return false;
-      }
-    });
-
     $(document).bind("ajaxComplete", function(){
       if (Drupal.settings.hostingTaskRefresh.latestVid > latestVid) {
         // Update our parameters with data passed in with the AJAX request.
@@ -141,27 +118,5 @@ $(document).ready(function() {
     });
   }
 });
-
-hostingTaskBindButtons = function(elem) {
-  $('.hosting-button-dialog', elem).click(function() {
-    $(document).data('hostingOpenModalFrame', true);
-    var options = {
-      url : Drupal.settings.basePath + 'hosting/js' + $(this).attr('href'),
-      draggable : false,
-      width : 600,
-      height : 150,
-      onSubmit : function() {
-        $(document).data('hostingOpenModalFrame', false);
-        latestVid = Drupal.settings.hostingTaskRefresh.latestVid;
-        tasksOutstanding = Drupal.settings.hostingTaskRefresh.tasksOutstanding;
-        hostingTaskRefreshQueueBlock(latestVid, tasksOutstanding);
-        hostingTaskRefreshList(latestVid, tasksOutstanding);
-      }
-    }
-    Drupal.modalFrame.open(options);
-    return false;
-  });
-}
-
 
 })(jQuery);
