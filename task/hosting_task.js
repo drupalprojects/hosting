@@ -144,21 +144,23 @@ $(document).ready(function() {
 
 hostingTaskBindButtons = function(elem) {
   $('.hosting-button-dialog', elem).click(function() {
-      $(document).data('hostingOpenModalFrame', true)
-     var options = {
-        url : Drupal.settings.basePath + 'hosting/js' + $(this).attr('href'),
-        draggable : false,
-        width : 600,
-        height : 150,
-        onSubmit : function() {
-          $(document).data('hostingOpenModalFrame', false)
-          hostingTaskRefreshQueueBlock();
-          hostingTaskRefreshList();
-        }
+    $(document).data('hostingOpenModalFrame', true);
+    var options = {
+      url : Drupal.settings.basePath + 'hosting/js' + $(this).attr('href'),
+      draggable : false,
+      width : 600,
+      height : 150,
+      onSubmit : function() {
+        $(document).data('hostingOpenModalFrame', false);
+        latestVid = Drupal.settings.hostingTaskRefresh.latestVid;
+        tasksOutstanding = Drupal.settings.hostingTaskRefresh.tasksOutstanding;
+        hostingTaskRefreshQueueBlock(latestVid, tasksOutstanding);
+        hostingTaskRefreshList(latestVid, tasksOutstanding);
       }
-      Drupal.modalFrame.open(options);
-      return false;
-   });
+    }
+    Drupal.modalFrame.open(options);
+    return false;
+  });
 }
 
 
