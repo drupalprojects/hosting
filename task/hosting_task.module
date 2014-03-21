@@ -127,6 +127,17 @@ function hosting_task_ajax_add_task($node, $task, $type = 'ajax') {
   hosting_add_task($node->nid, $task);
   if ($type == 'ajax') {
     $commands = array();
+    $latest = hosting_task_queue_status($node->nid);
+    $settings['hostingTaskRefresh'] = array(
+      'nid' => $node->nid,
+      'idlePollRate' => variable_get('hosting_task_queue_poll_idle', 10000),
+      'busyPollRate' => variable_get('hosting_task_queue_poll_busy', 1000),
+      'latestVid' => $latest['vid'],
+      'tasksOutstanding' => $latest['outstanding'],
+      'changed' => $node->changed,
+    );
+    $commands[] = ajax_command_settings($settings, TRUE);
+
     $commands[] = ajax_command_replace('.hosting-table', hosting_task_table($node));
     $commands[] = ajax_command_replace('#block-views-hosting-task-list-block .content', hosting_task_refresh_queue());
     $page = array('#type' => 'ajax', '#commands' => $commands);

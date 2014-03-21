@@ -107,22 +107,39 @@ hostingTaskRefreshQueueBlock = function(latestVid, tasksOutstanding) {
 }
 
 $(document).ready(function() {
-  $(document).data('hostingOpenModalFrame', false);
-  // Initialize our polling parameters from data passed in from Drupal.
-  var latestVid = Drupal.settings.hostingTaskRefresh.latestVid;
-  var tasksOutstanding = Drupal.settings.hostingTaskRefresh.tasksOutstanding;
-  // Set fast polling when outstanding tasks exist, otherwise use our configured refresh rate.
-  pollTimeout = tasksOutstanding ? Drupal.settings.hostingTaskRefresh.busyPollRate : Drupal.settings.hostingTaskRefresh.idlePollRate;
-  setTimeout(function() { hostingTaskRefreshList(latestVid, tasksOutstanding) }, pollTimeout );
-  setTimeout(function() { hostingTaskRefreshQueueBlock(latestVid, tasksOutstanding) }, pollTimeout );
-  hostingTaskBindButtons($(this));
-  $('#hosting-task-confirm-form-actions a').click(function() {
-    if (parent.Drupal.modalFrame.isOpen) {
-      setTimeout(function() { parent.Drupal.modalFrame.close({}, {}); }, 1);
-      return false;
-    }
-  });
+  if (typeof(Drupal.settings.hostingTaskRefresh) != 'undefined') {
+    $(document).data('hostingOpenModalFrame', false);
 
+    // Initialize our polling parameters from data passed in from Drupal.
+    var latestVid = Drupal.settings.hostingTaskRefresh.latestVid;
+    var tasksOutstanding = Drupal.settings.hostingTaskRefresh.tasksOutstanding;
+
+    var hostingTaskSetTimeouts = function(){
+      // Set fast polling when outstanding tasks exist, otherwise use our configured refresh rate.
+      pollTimeout = tasksOutstanding ? Drupal.settings.hostingTaskRefresh.busyPollRate : Drupal.settings.hostingTaskRefresh.idlePollRate;
+      setTimeout(function() { hostingTaskRefreshList(latestVid, tasksOutstanding) }, pollTimeout );
+      setTimeout(function() { hostingTaskRefreshQueueBlock(latestVid, tasksOutstanding) }, pollTimeout );
+    }
+
+    hostingTaskSetTimeouts();
+
+    hostingTaskBindButtons($(this));
+    $('#hosting-task-confirm-form-actions a').click(function() {
+      if (parent.Drupal.modalFrame.isOpen) {
+        setTimeout(function() { parent.Drupal.modalFrame.close({}, {}); }, 1);
+        return false;
+      }
+    });
+
+    $(document).bind("ajaxComplete", function(){
+      if (Drupal.settings.hostingTaskRefresh.latestVid > latestVid) {
+        // Update our parameters with data passed in with the AJAX request.
+        latestVid = Drupal.settings.hostingTaskRefresh.latestVid;
+        tasksOutstanding = Drupal.settings.hostingTaskRefresh.tasksOutstanding;
+        hostingTaskSetTimeouts();
+      }
+    });
+  }
 });
 
 hostingTaskBindButtons = function(elem) {
