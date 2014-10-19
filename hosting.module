@@ -52,8 +52,10 @@ function hosting_menu() {
     'title' => 'Hosting',
     'description' => 'Configure and manage the hosting system',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('hosting_features_form'),
-    'access arguments' => array('administer hosting'),
+    'page arguments' => array('system_modules'),
+    'access arguments' => array('administer modules'),
+    'file' => 'system.admin.inc',
+    'file path' => drupal_get_path('module', 'system'),
     'type' => MENU_NORMAL_ITEM,
   );
 
@@ -149,6 +151,41 @@ function hosting_menu_alter(&$items) {
   $items['node/add/task']['page callback'] = 'drupal_access_denied';
   $items['node/add/package']['type'] = MENU_CALLBACK;
   $items['node/add/task']['type'] = MENU_CALLBACK;
+}
+
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function hosting_form_system_modules_alter(&$form, &$form_state, $form_id)
+{
+  // On confirm form the modules key doesn't exist.
+  if (!isset($form['modules']) || arg(1) != 'hosting') {
+    return;
+  }
+
+  // Get Hosting "Features"
+  $features = hosting_get_features(TRUE);
+
+  // Remove module filters' modules array.
+  $modules = $form['modules'];
+  $form['modules'] = array(
+    '#tree' => TRUE,
+  );
+
+  // Build new modules array
+  foreach ($features as $feature => $info) {
+    $package = $info['package'];
+    $module = $info['module'];
+
+    // Load in fieldset.
+    if (empty($form['modules'][$package])) {
+      $form['modules'][$package] = $modules[$package];
+    }
+
+    // Load in module.
+    $form['modules'][$package][$module] = $modules[$package][$module];
+  }
 }
 
 /**

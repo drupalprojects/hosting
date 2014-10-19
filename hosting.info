@@ -12,6 +12,7 @@ dependencies[] = hosting_package
 dependencies[] = hosting_platform
 dependencies[] = hosting_site
 dependencies[] = hosting_web_server
+dependencies[] = module_filter
 
 files[] = includes/views/handlers/hosting_field_handler_interval.inc
 files[] = hosting.test
