@@ -26,7 +26,7 @@ function hosting_site_drush_context_import($context, &$node) {
 
     // TODO: abstract this to remove duplication with import post hooks.
     $profile = hosting_package_instance_load(array(
-      'i.rid' => $platform,
+      'i.rid' => $node->platform,
       'p.short_name' => $context->profile
     ));
     if (!$profile) {
