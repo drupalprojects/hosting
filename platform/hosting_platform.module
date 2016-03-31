@@ -78,6 +78,7 @@ function hosting_platform_hosting_tasks() {
     'description' => t('Verify that the platform is correctly installed and working.'),
     'weight' => 10,
     'provision_save' => TRUE,
+    'idempotent' => TRUE,
   );
   $tasks['platform']['delete'] = array(
     'title' => t('Delete'),
@@ -87,6 +88,7 @@ function hosting_platform_hosting_tasks() {
         Are you really sure you want to delete this platform?'),
     'weight' => 10,
     'dialog' => TRUE,
+    'idempotent' => TRUE,
   );
   $tasks['platform']['lock'] = array(
     'title' => t('Lock'),

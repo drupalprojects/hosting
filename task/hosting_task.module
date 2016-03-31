@@ -491,14 +491,78 @@ function hosting_task_retry($task_id) {
 }
 
 /**
- * Helper function to generate new task node
+ * Checks if a task is idempotent and if so, if we can queue it again.
+ *
+ * (Tasks are never really idempotent, but this is used to mean that if you run
+ * that it's pointless to run them twice in a row.)
+ *
+ * @param $target_node
+ *   The node of the object on which to run the task (must contain type)
+ * @param $task_type
+ *   The type of task we want to run on the $target_node
+ * @return TRUE if it's okay to queue the task again, FALSE if the task is
+ * idempotent and already queued.
+ * @see hook_hosting_tasks()
  */
-function hosting_add_task($nid, $type, $args = NULL, $status = HOSTING_TASK_QUEUED) {
+function _hosting_task_check_task_idempotence($target_node, $task_type) {
+  $tasks = hosting_available_tasks($target_node->type);
+
+  if (in_array($task_type, array_keys($tasks))) {
+    $task = $tasks[$task_type];
+    if (empty($task['idempotent']) || ($task['idempotent'] == FALSE)) {
+      // The task is not idempotent
+      return TRUE;
+    }
+  }
+  else {
+    $error_message = "Error: Nodes of type '" . $target_node->type . "' don't have a task of type '" . $task_type . "'.";
+    throw new Exception($error_message);
+  }
+
+  $result = db_query("SELECT rid, nid, task_type, task_status FROM hosting_task WHERE rid = :rid AND task_type = :task_type AND task_status = :task_status AND vid=(SELECT max(vid) FROM hosting_task WHERE rid=:rid AND task_type=:task_type)", array(':rid' => $target_node->nid, ':task_type' => $task_type, ':task_status' => HOSTING_TASK_QUEUED))->fetchObject();
+
+  // If a result is found, this means the task is already queued
+  if (!empty($result)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * Helper function to generate new task node
+ *
+ * @param $nid
+ *   The nid of the site/platform/server on which to run the task.
+ * @param $type
+ *   The type of task to run.
+ * @param $args
+ *   Arguments of the task if any (for tasks that support arguments).
+ * @param $status
+ *   The status of the task.
+ * @param $ignore_idempotence
+ *   If this is set to TRUE, the task will be added even if it shouldn't be
+ *   (ie if it's included in HOOK_hosting_task_idempotent_tasks()).
+ * @return The node of the task that was just created through node_save().
+ * @see _hosting_task_check_task_idempotence().
+ */
+function hosting_add_task($nid, $type, $args = NULL, $status = HOSTING_TASK_QUEUED, $ignore_idempotence = FALSE) {
   global $user;
 
   // Guard against destructive tasks run on guarded nodes.
   if (!hosting_task_dangerous_task_is_allowed($type, $nid)) {
     return FALSE;
+  }
+
+  // Can't add an idempotent task that is already queued, unless explicitely forced
+  if (!$ignore_idempotence) {
+    $target_node = node_load($nid);
+
+    if (empty($target_node) || !_hosting_task_check_task_idempotence($target_node, $type)) {
+
+      watchdog('hosting_task', "Tried to add idempotent task '%task_type' to site '%nid' (see %url) while it's already queued. Set \$ignore_idempotence to TRUE if this is on purpose.", array('%task_type' => $type, '%nid' => $nid, '%url' => url('node/' . $nid, array('absolute' => TRUE))), WATCHDOG_WARNING);
+      return FALSE;
+    }
   }
 
   $node = db_query("SELECT nid, uid, title FROM {node} WHERE nid = :nid", array(':nid' => $nid))->fetchObject();
