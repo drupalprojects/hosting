@@ -396,10 +396,11 @@ function hosting_server_form($node, &$form_state) {
       '#weight' => isset($service['weight']) ? $service['weight'] : 0,
     );
 
-    $options = array(
-      'null' => t('None'),
-    );
-    
+    $options = array();
+    if (!isset($service['required']) || !$service['required']) {
+      $options['null'] = t('None');
+    }
+
     foreach ($service['types'] as $type => $class_name) {
       $serviceClass = new $class_name;
       $options[] = isset($serviceClass->name)? $serviceClass->name: $type;

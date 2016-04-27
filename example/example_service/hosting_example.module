@@ -48,6 +48,7 @@ function hosting_example_hosting_service_type() {
     'example' => array(// Machine name
       'title' => t('Example service'), // Human-readable name
       'weight' => 0, // Optional, defaults to 0
+      'required' => FALSE, // Set to true if a server must have at least one service of this type.
     ),
   );
 }
