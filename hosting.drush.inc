@@ -82,6 +82,7 @@ function hosting_drush_command() {
     'options' => array(
       'old_platform_name' => dt('The old platform name'),
       'new_platform_name' => dt('The new platform name'),
+      'new_db_server' => dt('The new database server name'),
     ),
   );
 

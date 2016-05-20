@@ -13,11 +13,12 @@ include_once 'hosting.inc';
 function drush_hosting_resume() {
   drush_log('bootstrapping drupal');
   drush_bootstrap(DRUSH_BOOTSTRAP_DRUPAL_FULL);
-  $server_name = drush_get_option('server_name');
   $old_platform = drush_get_option('old_platform_name');
   $new_platform = drush_get_option('new_platform_name');
 
   $node = hosting_context_load(d()->name);
+  // Trigger a verify task on the hostmaster site.
+  $node->verified = 0;
 
   // fix the old platform first
   $platform_id = db_query('SELECT nid FROM {hosting_platform} WHERE publish_path = :publish_path', array(':publish_path' => d($old_platform)->root))->fetchField();
@@ -50,9 +51,24 @@ function drush_hosting_resume() {
 
   hosting_context_register($platform_id, ltrim($new_platform, '@'));
 
-  drush_log('fixing platform for site node');
-  $node->verified = 0;
+  drush_log('Fixing platform for site node.');
   $node->platform = $platform_id;
+
+  if ($new_db_server = drush_get_option('new_db_server', FALSE)) {
+    // if the new database server doesn't exist, create it.
+    if (!($db_server_id = db_query('SELECT nid FROM {hosting_context} WHERE name=:name', array(':name' => ltrim($new_db_server, '@')))->fetchField())) {
+      drush_log(dt('Database server not found for %db_server. Importing from context.', array('%db_server' => $new_db_server)));
+      // TODO: run hosting_import against the db server context.
+      // TODO: set $db_server_id to the new server's NID.
+    }
+    else {
+      drush_log(dt('Database server found for %db_server: %id', array('%db_server' => $new_db_server, '%id' => $db_server_id)));
+    }
+
+  drush_log('Fixing database server for site node.');
+  $node->db_server = $db_server_id;
+  }
+
   node_save($node);
   provision_backend_invoke(d()->name, 'hosting-setup');
 }
