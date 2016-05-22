@@ -63,54 +63,43 @@ function drush_hosting_queued() {
 
   watchdog('hosting_queued', 'Started Hosting queue daemon, waiting for new tasks');
 
+  // Delay for a configurable amount of time.
+  $post_task_delay = variable_get('hosting_queued_post_task_delay', 0);
+  $task_concurrency = variable_get('hosting_queued_task_concurrency', 1);
+
   while (TRUE) {
     try {
       // Should we terminate.
       if (time() > $end_time) {
-        // Restart the daemon to recycle leaked memory
+        // Restart the daemon to recycle leaked memory.
         hosting_queued_restart();
       }
 
+      // Compute the amount of tasks to run, but don't allow negative values.
+      $tasks_to_run = max(0, $task_concurrency - hosting_task_count_running());
 
-    // Get some tasks to run
-    if ($tasks = @_hosting_get_new_tasks()) {
-      if (lock_acquire('hosting_queue_tasks_running', HOSTING_QUEUE_LOCK_TIMEOUT)) {
-        drush_log('Acquired lock on task queue.');
-        foreach ($tasks as $task) {
-          // We sleep for a second just in case others want to run the task first.
-          // This guards against other processes that want to add a hosting task
-          // with arguments and run it immediately, they should be able to do this
-          // without us getting in there first.
-          // This is a workaround for http://drupal.org/node/1003536
-          drush_log(dt('Found task to execute. Pausing before execution.'));
-          sleep(1);
+      // Get some tasks to run if we should.
+      if ($tasks_to_run > 0 && ($tasks = @_hosting_get_new_tasks($tasks_to_run))) {
+        if (lock_acquire('hosting_queue_tasks_running', HOSTING_QUEUE_LOCK_TIMEOUT)) {
+          drush_log('Acquired lock on task queue.');
+          foreach ($tasks as $task) {
+            watchdog('hosting_queued', 'Forking to execute task @nid.', array('@nid' => $task->nid));
+            // Execute the task in a separate process.
+            drush_invoke_process('@self', 'hosting-task', array($task->nid), array('strict' => FALSE, 'post-task-delay' => $post_task_delay), array('fork' => TRUE));
 
-          watchdog('hosting_queued', 'Running task @nid.', array('@nid' => $task->nid));
-          // Execute the task in the backend
-          drush_invoke_process('@self', 'hosting-task', array($task->nid), array('strict' => FALSE), array('interactive' => TRUE));
-          drush_log(dt('Finished executing task.'));
+            // We're done with this task, this unset might help reduce memory usage.
+            unset($task);
 
-          // Delay for a configurable amount of time.
-          $delay = variable_get('hosting_queued_post_task_delay', 0);
-          if (!empty($delay)) {
-            drush_log(dt('Going to sleep for @count seconds after completing task.', array('@count' => $delay)));
-            sleep($delay);
+            // Should we terminate.
+            if (time() > $end_time) {
+              // Restart the daemon to recycle leaked memory
+              hosting_queued_restart();
+            }
           }
-
-          // We're done with this task, this unset might help reduce memory usage.
-          unset($task);
-
-          // Should we terminate.
-          if (REQUEST_TIME > $end_time) {
-            // Restart the daemon to recycle leaked memory
-            hosting_queued_restart();
-          }
+          drush_log('Releasing lock on task queue.');
+          lock_release('hosting_queue_tasks_running');
         }
-        drush_log('Releasing lock on task queue.');
-        lock_release('hosting_queue_tasks_running');
       }
-    }
-
     }
     catch (Exception $e) {
       // Check if there was a database error, so we can recover gracefully if needed.

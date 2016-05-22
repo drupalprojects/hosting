@@ -22,6 +22,14 @@ function hosting_queued_settings_form($form, &$form_state) {
     '#markup' => !empty($last_seen) ? t('Last started: @interval ago.', array('@interval' => format_interval(REQUEST_TIME - $last_seen))) : t('Never started.'),
   );
 
+  $form['hosting_queued_task_concurrency'] = array(
+    '#type' => 'select',
+    '#title' => t('Task concurrency'),
+    '#description' => t('Select how many tasks can run in parallel via the queue daemon.'),
+    '#default_value' => variable_get('hosting_queued_task_concurrency', 1),
+    '#options' => drupal_map_assoc(range(1, 50)),
+  );
+
   $form['hosting_queued_post_task_delay'] = array(
     '#type' => 'select',
     '#title' => t('Post task delay'),

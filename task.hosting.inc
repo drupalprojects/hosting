@@ -155,6 +155,11 @@ function drush_hosting_task() {
   // New revision is created at the beginning of function.
   $task->revision = FALSE;
   $task->delta = microtime(TRUE) - $task->executed;
+  // Optionally sleep before updating the task node.
+  $delay = drush_get_option('post-task-delay', 0);
+  if (is_numeric($delay) && $delay > 0) {
+    sleep($delay);
+  }
   node_save($task);
 }
 
