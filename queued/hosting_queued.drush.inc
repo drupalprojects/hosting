@@ -73,7 +73,7 @@ function drush_hosting_queued() {
 
 
     // Get some tasks to run
-    if ($tasks = @_hosting_get_new_tasks()) {
+    if ($tasks = @hosting_get_new_tasks()) {
       if (lock_acquire('hosting_queue_tasks_running', HOSTING_QUEUE_LOCK_TIMEOUT)) {
         drush_log('Acquired lock on task queue.');
         foreach ($tasks as $task) {
