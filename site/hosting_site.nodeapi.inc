@@ -26,7 +26,7 @@ function hosting_site_node_info() {
 /**
  * Implements hook_view().
  */
-function hosting_site_view(&$node, $teaser = FALSE) {
+function hosting_site_view($node, $view_mode, $langcode = NULL) {
   hosting_set_breadcrumb($node);
   $node->content['info']['#prefix'] = '<div id="hosting-site-info" class="hosting-info-list">';
   if ($node->site_status == HOSTING_SITE_ENABLED) {
@@ -115,6 +115,28 @@ function hosting_site_view(&$node, $teaser = FALSE) {
     drupal_add_js(drupal_get_path('module', 'hosting_task') . '/hosting_task.js');
   }
   return $node;
+}
+
+/**
+ * Implements hook_field_extra_fields()
+ */
+function hosting_site_field_extra_fields() {
+  $return['node']['site'] = array(
+    'display' => array(
+      'info' => array(
+        'label' => t('Aegir Site Information'),
+        'description' => t('Detailed information about this site.'),
+        'weight' => 0,
+      ),
+      'tasks_view' => array(
+        'label' => t('Aegir Site Tasks'),
+        'description' => t('List of available tasks.'),
+        'weight' => 1,
+      ),
+    ),
+  );
+
+  return $return;
 }
 
 /**
