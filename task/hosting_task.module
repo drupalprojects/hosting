@@ -1771,7 +1771,6 @@ function hosting_task_preprocess_page(&$variables) {
   $settings['hostingTasks'] = array(
     'url' => url("hosting/json/tasks"),
     'refreshTimeout' => 2000,
-    'tasks' => views_get_view_result('hosting_task_list', 'block'),
   );
 
   // If on a hosting node page...
