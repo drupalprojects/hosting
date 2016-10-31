@@ -11,7 +11,7 @@
             }
 
             // If #hostingTasks object is available, initiate a Vue.
-            if ($('#hostingTasks').length) {
+            $('#hostingTasks', context).once('aegir-vue', function () {
                 Drupal.vues.hostingTasksVue = new Vue({
                     el: '#hostingTasks',
                     data: {
@@ -20,24 +20,24 @@
                         availableTasks: Drupal.settings.hostingAvailableTasks,
                         timeout: Drupal.settings.hostingTasks.refreshTimeout
                     },
+                    mounted: function () {
+                        this.updateTimeago();
+                    },
                     created: function () {
-
-                        // Update time elements from their DOM timestamps.
-                        $('time.timeago', '#hostingTasks').timeago("updateFromDOM");
-
                         // Set timeout to reload data.
                         setTimeout(this.fetchData, this.timeout);
                     },
                     updated: function () {
-
-                        // Clear html and title attributes from elements with empty datetime.
-                        $('time.timeago[datetime=""]').html('').attr('title')
-
-                        // Update time elements from their DOM timestamps.
-                        $('time.timeago', '#hostingTasks').timeago("updateFromDOM");
-
+                        this.updateTimeago();
                     },
                     methods: {
+                        updateTimeago: function () {
+                            // Clear html and title attributes from elements with empty datetime.
+                            $('time.timeago[datetime=""]').html('').attr('title')
+
+                            // Update time elements from their DOM timestamps.
+                            $('time.timeago', '#hostingTasks').timeago("updateFromDOM");
+                        },
                         fetchData: function () {
                             // Thanks to the GitHub Commits example: https://vuejs.org/examples/commits.html
                             var xhr = new XMLHttpRequest()
@@ -62,7 +62,7 @@
                         }
                     }
                 });
-            }
+            });
 
             if ($('#hostingAvailableTasks').length) {
                 Drupal.vues.hostingAvailableTasksVue = new Vue({
