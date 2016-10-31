@@ -1,58 +1,84 @@
 (function($) {
-window.onload=function() {
 
-    // If #hostingTasks object is available, initiate a Vue.
-    if ($('#hostingTasks').length) {
-        var hostingTasksVue = new Vue({
-            el: '#hostingTasks',
-            data: {
-                tasksUrl: Drupal.settings.hostingTasks.url,
-                tasks: Drupal.settings.hostingTasks.tasks,
-                availableTasks: Drupal.settings.availableTasks,
-                timeout: Drupal.settings.hostingTasks.refreshTimeout
-            },
-            created: function () {
+    Drupal.vues = [];
 
-                // Update time elements from their DOM timestamps.
-                $('time.timeago', '#hostingTasks').timeago("updateFromDOM");
+    Drupal.behaviors.hostingTasks = {
+        attach: function (context, settings) {
 
-                // Set timeout to reload data.
-                setTimeout(this.fetchData, this.timeout);
-            },
-            updated: function () {
+            // Don't reattach using Drupal.attachBehaviors
+            if (Drupal.vues.length > 0) {
+                return;
+            }
 
-                // Clear html and title attributes from elements with empty datetime.
-                $('time.timeago[datetime=""]').html('').attr('title')
+            // If #hostingTasks object is available, initiate a Vue.
+            if ($('#hostingTasks').length) {
+                Drupal.vues.hostingTasksVue = new Vue({
+                    el: '#hostingTasks',
+                    data: {
+                        tasksUrl: Drupal.settings.hostingTasks.url,
+                        tasks: Drupal.settings.hostingTasks.tasks,
+                        availableTasks: Drupal.settings.hostingAvailableTasks,
+                        timeout: Drupal.settings.hostingTasks.refreshTimeout
+                    },
+                    created: function () {
 
-                // Update time elements from their DOM timestamps.
-                $('time.timeago', '#hostingTasks').timeago("updateFromDOM");
-            },
-            methods: {
-                fetchData: function () {
-                    // Thanks to the GitHub Commits example: https://vuejs.org/examples/commits.html
-                    var xhr = new XMLHttpRequest()
-                    var self = this
-                    xhr.open('GET', self.tasksUrl)
-                    xhr.onload = function () {
-                        var data = JSON.parse(xhr.responseText)
+                        // Update time elements from their DOM timestamps.
+                        $('time.timeago', '#hostingTasks').timeago("updateFromDOM");
 
-                        // Replace vue data with new data.
-                        if (data.tasks) {
-                            self.tasks = data.tasks
-                        }
-                        if (data.availableTasks) {
-                            self.availableTasks = data.availableTasks;
+                        // Set timeout to reload data.
+                        setTimeout(this.fetchData, this.timeout);
+                    },
+                    updated: function () {
+
+                        // Clear html and title attributes from elements with empty datetime.
+                        $('time.timeago[datetime=""]').html('').attr('title')
+
+                        // Update time elements from their DOM timestamps.
+                        $('time.timeago', '#hostingTasks').timeago("updateFromDOM");
+
+                    },
+                    methods: {
+                        fetchData: function () {
+                            // Thanks to the GitHub Commits example: https://vuejs.org/examples/commits.html
+                            var xhr = new XMLHttpRequest()
+                            var self = this
+                            xhr.open('GET', self.tasksUrl)
+                            xhr.onload = function () {
+                                var data = JSON.parse(xhr.responseText)
+
+                                // Replace vue data with new data.
+                                if (data.tasks) {
+                                    self.tasks = data.tasks
+                                }
+                                if (data.availableTasks) {
+                                    self.availableTasks = data.availableTasks;
+                                    // Update the other vue's data.
+                                    Drupal.vues.hostingAvailableTasksVue.availableTasks = self.availableTasks
+
+                                }
+                            }
+                            xhr.send()
+                            setTimeout(this.fetchData, this.timeout);
                         }
                     }
-                    xhr.send()
-                    setTimeout(this.fetchData, this.timeout);
-                }
+                });
             }
-        });
-    }
-}
 
-    // Drupal.behaviors.hostingTimeAgo = {
+            if ($('#hostingAvailableTasks').length) {
+                Drupal.vues.hostingAvailableTasksVue = new Vue({
+                    el: '#hostingAvailableTasks',
+                    data: {
+                        availableTasks: Drupal.settings.hostingAvailableTasks,
+                        tasks: Drupal.settings.tasks,
+                    },
+                });
+            }
+        }
+    }
+}(jQuery));
+
+
+// Drupal.behaviors.hostingTimeAgo = {
     //     attach: function (context, settings) {
     //         $.timeago.settings.refreshMillis = 1000;
     //         $.timeago.settings.strings = {
@@ -79,7 +105,7 @@ window.onload=function() {
     //         $(".timeago", context).timeago();
     //     }
     // }
-}(jQuery));
+// }(jQuery));
 
     //
     // Drupal.behaviors.hostingTasks = {

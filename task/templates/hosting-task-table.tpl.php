@@ -63,7 +63,7 @@
       <?php endforeach; ?>
     </noscript>
 
-    <template v-for="task in tasks">
+    <template v-for="task in availableTasks">
 
     <tr v-bind:class="task.class" v-if="!task.hidden">
       <td class="hosting-status">
