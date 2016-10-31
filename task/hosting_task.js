@@ -52,9 +52,11 @@
                                 }
                                 if (data.availableTasks) {
                                     self.availableTasks = data.availableTasks;
-                                    // Update the other vue's data.
-                                    Drupal.vues.hostingAvailableTasksVue.availableTasks = self.availableTasks
 
+                                    // Update the other vue's data.
+                                    if (Drupal.vues.hostingAvailableTasksVue) {
+                                        Drupal.vues.hostingAvailableTasksVue.availableTasks = self.availableTasks
+                                    }
                                 }
                             }
                             xhr.send()
