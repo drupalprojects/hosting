@@ -175,11 +175,7 @@ function hosting_task_ajax_list($nid = NULL) {
   // Load available tasks if a node is specified and accessible.
   $node = node_load($nid);
   if ($node && node_access('view', $node)) {
-
-    if (current_path() == "node/$nid") {
-      $return['availableTasks'] =  array_values(hosting_task_fetch_tasks($node->nid));
-    }
-
+    $return['availableTasks'] =  array_values(hosting_task_fetch_tasks($node->nid));
     $return['changed'] = $node->changed;
     $return['navigate_url'] = url('node/' . $node->nid);
     $return['tasks'] = views_get_view_result('hosting_task_list', 'page_contextual', $nid);
