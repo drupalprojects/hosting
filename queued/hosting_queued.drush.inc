@@ -62,7 +62,7 @@ function drush_hosting_queued() {
   variable_set('hosting_queued_process_started', REQUEST_TIME);
 
   watchdog('hosting_queued', 'Started Hosting queue daemon, waiting for new tasks');
-
+  drush_log('Started hosting queue daemon. Waiting for new tasks.', 'ok');
   while (TRUE) {
     try {
       // Should we terminate.
@@ -85,10 +85,12 @@ function drush_hosting_queued() {
           drush_log(dt('Found task to execute. Pausing before execution.'));
           sleep(1);
 
-          watchdog('hosting_queued', 'Running task @nid.', array('@nid' => $task->nid));
+          hosting_task_log_start($task);
+
           // Execute the task in the backend
           drush_invoke_process('@self', 'hosting-task', array($task->nid), array('strict' => FALSE), array('interactive' => TRUE));
-          drush_log(dt('Finished executing task.'));
+
+          hosting_task_log_finish($task);
 
           // Delay for a configurable amount of time.
           $delay = variable_get('hosting_queued_post_task_delay', 0);
