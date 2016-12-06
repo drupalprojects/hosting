@@ -736,7 +736,7 @@ function hosting_tasks_queue($count = 20) {
   }
 
   foreach ($tasks as $task) {
-    hosting_task_execute($task);
+    hosting_task_execute($task, array('fork' => TRUE));
   }
 }
 
@@ -747,11 +747,10 @@ function hosting_tasks_queue($count = 20) {
  * @param $task
  *   A fully loaded task node.
  *
- * @param $fork
- *   Set to FALSE to stay in the same process.
- *   Used by hosting-queued command.
+ * @param $backend_options
+ *   @see drush_invoke_process().
  */
-function hosting_task_execute($task, $fork = TRUE) {
+function hosting_task_execute($task, $backend_options = TRUE) {
   // Log in watchdog and drush.
   watchdog('hosting_task', 'Starting task "@title" [node/@nid].', array(
     '@title' => $task->title,
@@ -763,7 +762,7 @@ function hosting_task_execute($task, $fork = TRUE) {
   )), 'ok');
 
   // Execute in it's own process.
-  drush_invoke_process('@self', "hosting-task", array($task->nid), array('strict' => FALSE), array('fork' => $fork));
+  drush_invoke_process('@self', "hosting-task", array($task->nid), array('strict' => FALSE), $backend_options);
 
   drush_log(dt('Finished task "@title" [node/@nid].', array(
     '@title' => $task->title,
