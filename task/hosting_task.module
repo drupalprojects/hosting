@@ -750,7 +750,7 @@ function hosting_tasks_queue($count = 20) {
  * @param $backend_options
  *   @see drush_invoke_process().
  */
-function hosting_task_execute($task, $backend_options = TRUE) {
+function hosting_task_execute($task, $backend_options = array()) {
   // Log in watchdog and drush.
   watchdog('hosting_task', 'Starting task "@title" [node/@nid].', array(
     '@title' => $task->title,
@@ -779,7 +779,7 @@ function hosting_task_execute($task, $backend_options = TRUE) {
       '@title' => $task->title,
       '@nid' => $task->nid,
       '@status' => _hosting_parse_error_code($task->task_status),
-      '@duration' => format_interval($task->duration, 1),
+      '@duration' => format_interval($task->delta, 1),
     )), 'ok');
   }
 }
