@@ -18,15 +18,27 @@ function drush_hosting_package_pre_hosting_task() {
           'p.package_type' => 'profile',
           'p.short_name' => $task->ref->profile_name,
         ));
-        $task->ref->profile = current($instances)->package_id;
-        $task->ref->no_verify = TRUE;
-        node_save($task->ref);
 
-        drush_log(dt('Updated site node !nid with install profile "!profile" with package ID !package_id.', array(
-          '!nid' => $task->ref->nid,
-          '!profile' => $task->ref->profile_name,
-          '!package_id' => $task->ref->profile,
-        )), 'notice');
+        // If instance is found, save the package ID to hosting_site table.
+        $instance = current($instance);
+        if (!empty($instance->package_id)) {
+          db_update('hosting_site')
+            ->fields(array('profile' => $instance->package_id))
+            ->condition('nid', $task->ref->nid)
+            ->execute();
+
+          drush_log(dt('Updated site node !nid with install profile "!profile" with package ID !package_id.', array(
+            '!nid' => $task->ref->nid,
+            '!profile' => $task->ref->profile_name,
+            '!package_id' => $task->ref->profile,
+          )), 'notice');
+        }
+        else {
+          drush_log(dt('Package for install profile "!profile" not found for site !nid.', array(
+            '!nid' => $task->ref->nid,
+            '!profile' => $task->ref->profile_name,
+          )), 'warning');
+        }
       }
 
       $profile = node_load($task->ref->profile);
