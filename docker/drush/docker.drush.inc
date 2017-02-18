@@ -60,9 +60,14 @@ function drush_docker_pre_provision_delete () {
  */
 function _server_has_docker_services() {
   
+  if (d()->type != 'server' || d()->name == '@self') {
+    return FALSE;
+  }
+  
   // Detect if this server is using any docker services return TRUE;
   foreach (d()->get_services() as $service_name => $server) {
-    if (isset(d()->service($service_name)->docker_service) && d()->service($service_name)->docker_service) {
+    $property = "{$service_name}_service_type";
+    if (strpos(d()->{$property}, 'docker') !== FALSE) {
       return TRUE;
     }
   }
