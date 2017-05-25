@@ -160,7 +160,13 @@ class hostingService {
     }
 
   }
-
+  
+  /**
+   * Implement this method to add form elements to site nodes that use this service.
+   */
+  public function site_form(&$form, $node) {
+  }
+    
   public function view(&$render) {
     if ($this->has_restart_cmd) {
       $render['restart_cmd'] = array(

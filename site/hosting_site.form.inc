@@ -346,6 +346,49 @@ function hosting_site_form($node, &$form_state) {
       '#value' => isset($node->$extra_attribute) ? $node->$extra_attribute : NULL,
     );
   }
+  
+  // Let services add form elements to the site node form.
+  // @TODO: This only works on site edit pages, because we don't yet know what
+  // platform the user wants (which determnines which web server the user wants.)
+  $form['server_tabs'] = array(
+    '#type' => 'vertical_tabs',
+  );
+  $services_metadata = hosting_server_services();
+
+  // The servers that a site requires are loaded via hosting_site_load().
+  // Show a fieldset for each one of them.
+  foreach ($node->servers as $server_type => $server) {
+    $form['servers'][$server_type] = array(
+      '#type' => 'fieldset',
+      '#group' => 'server_tabs',
+      '#title' => $services_metadata[$server_type]['title'],
+    );
+    
+    // Show the chosen server
+    $form['servers'][$server_type]['server'] = array(
+      '#type' => 'item',
+      '#title' => t('Server'),
+      '#markup' => l($server->title, "node/{$server->nid}", array(
+        'attributes' => array(
+          'target' => '_blank',
+        ),
+      )),
+    );
+    foreach ($server->services as $service_type => $service) {
+      if (method_exists($service, 'site_form')) {
+        $service->site_form($form['servers'][$server_type][$service_type], $node);
+      }
+    }
+    
+    // If there is more than one web server, and user has edit access, show a
+    // link to change the web server.
+    // Platform web server can be changed on the platform edit page.
+  
+    // If there is more than one db server, and user has edit access, show a
+    // link to change the db server.
+    // Site db server can be changed with a migrate task.
+    
+  }
 
   return $form;
 }
