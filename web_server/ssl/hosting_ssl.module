@@ -89,14 +89,14 @@ function hosting_ssl_get_profiles() {
   return array_unique($ssl_profiles);
 }
 
-/**
- * Implements hook_form_alter().
- */
-function hosting_ssl_form_alter(&$form, &$form_state, $form_id) {
-  if ($form_id == 'site_node_form') {
-    hosting_ssl_site_form($form, $form_state, $form_id);
-  }
-}
+///**
+// * Implements hook_form_alter().
+// */
+//function hosting_ssl_form_alter(&$form, &$form_state, $form_id) {
+//  if ($form_id == 'site_node_form') {
+//    hosting_ssl_site_form($form, $form_state, $form_id);
+//  }
+//}
 
 /**
  * Per-server, per-ip certificate listing.

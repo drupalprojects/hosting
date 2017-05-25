@@ -78,7 +78,83 @@ class hostingService_http_ssl extends hostingService_http_public {
 
     $this->ssl_port = $context->http_ssl_port;
   }
-
+  
+  public function site_form(&$form, $node) {
+    parent::site_form($form, $node);
+  
+//    $new_site = TRUE;
+//    $ssl_available = FALSE;
+    // Only allow the user to modify these values when the platform is SSL enabled.
+    // @TODO: Remove this, we probably don't need it any more since this method is only invoked if the services are enabled.
+//    if (isset($node->nid)) {
+//      $new_site = FALSE;
+//      $platform = node_load($node->platform);
+//      $server = node_load($platform->web_server);
+//
+//      if ($server->services['http']->ssl_enabled) {
+//        $ssl_available = TRUE;
+//      }
+//    }
+//    elseif (count(hosting_ssl_get_servers('http')) > 0) {
+//      $ssl_available = TRUE;
+//    }
+//
+  
+//    if (!$ssl_available) {
+//      return;
+//    }
+  
+    
+    // Assume SSL is available and this is not a new site, since our code doesn't support new sites yet.
+    $ssl_available = TRUE;
+    $new_site = FALSE;
+  
+    _hosting_site_field($form, $node, 'hosting_ssl_wrapper', array(
+      '#type' => 'fieldset',
+      '#title' => t('SSL Settings'),
+      '#default_value' => NULL,
+//      '#parents' => array('hosting_ssl_wrapper'),
+    ), 'filter_xss', $ssl_available);
+  
+    _hosting_site_field($form['hosting_ssl_wrapper'], $node, 'ssl_enabled', array(
+      '#type' => 'radios',
+      '#title' => t('Encryption'),
+      '#options' => hosting_ssl_status_options(),
+      '#description' => t('Enabling encryption will publish your site on both HTTP and HTTPS ports, allowing you to redirect users to the more secure version for certain pages that require the additional security. Requiring encryption will automatically redirect all unencrypted traffic to your HTTPS site.'),
+      '#required' => TRUE,
+      '#default_value' => (isset($node->ssl_enabled)) ? $node->ssl_enabled : HOSTING_SSL_DISABLED,
+      '#access' => user_access('create ssl certificate'),
+    ), 'hosting_ssl_status_options', $ssl_available);
+  
+    _hosting_site_field($form['hosting_ssl_wrapper'], $node, 'ssl_key', array(
+      '#type' => 'radios',
+      '#title' => t('Encryption key'),
+      '#description' => t("Choose an existing SSL certificate. If you do not wish to use any of your existing certificates, you may choose to generate a new one."),
+      '#options' => hosting_ssl_get_keys(NULL, TRUE),
+      '#required' => TRUE,
+      '#default_value' => (isset($node->ssl_key) && $node->ssl_key > 0) ? $node->ssl_key : HOSTING_SSL_CUSTOM_KEY,
+      '#access' => user_access('create ssl certificate'),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="ssl_enabled"]' => array('!value' => 0),
+        ),
+      ),
+    ), 'hosting_ssl_output_key', $ssl_available, !$new_site);
+  
+    _hosting_site_field($form['hosting_ssl_wrapper'], $node, 'ssl_key_new', array(
+      '#type' => 'textfield',
+      '#title' => t('New encryption key'),
+      '#description' => t("A name for the certificate, often relating to the domain name. This field should only contain lower case alpha-numeric and '_', '-' or '.' characters. If the SSL certificate is not found in config/ssl.d, Aegir will automatically generate a self-signed certificate for you. You can replace the generated with a properly signed version later. Any required intermediate certificates can be added in a file called config/ssl.d/&lt;name&gt;/openssl_chain.crt"),
+      '#default_value' => '',
+      '#access' => user_access('create ssl certificate'),
+      '#states' => array(
+        'visible' => array(
+          ':input[name="ssl_enabled"]' => array('!value' => 0),
+          ':input[name="ssl_key"]' => array('value' => HOSTING_SSL_CUSTOM_KEY),
+        ),
+      ),
+    ), 'filter_xss', $ssl_available, FALSE);
+  }
 }
 
 class hostingService_http_apache_ssl extends hostingService_http_ssl {
