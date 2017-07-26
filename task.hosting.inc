@@ -152,7 +152,7 @@ function drush_hosting_task() {
     $alias = '@none';
   }
   else {
-    $alias = $task->ref->hosting_name;
+    $alias = $task->ref ->hosting_name;
   }
 
   // Run the actual command. Adding alias here to work around Drush API.
