@@ -275,15 +275,15 @@ function hosting_site_insert(&$node) {
       // assume platform status matches site status:
       // If developer creates a site node that's disabled,
       // the platform should be too.
-      if (empty($node->platform_node->platform_status)) {
+      if (!isset($node->platform_node->platform_status) && isset($node->site_status)) {
         $node->platform_node->platform_status = $node->site_status;
       }
 
       // If web_server hasn't been explicity set, use hostmaster's web server.
-      if (empty($node->platform_node->web_server)) {
+      if (!isset($node->platform_node->web_server)) {
         $hostmaster = hosting_context_load('hostmaster');
         $hostmaster_platform = node_load($hostmaster->platform);
-        $node->platform_node->web_server = $hostmaster_platform->nid;
+        $node->platform_node->web_server = $hostmaster_platform->web_server;
       }
 
       // If platform title has not been set, generate one from the site title.
@@ -298,9 +298,15 @@ function hosting_site_insert(&$node) {
 
       $node->platform_node->type = 'platform';
       if ($node->platform_node = node_submit($node->platform_node)) {
-          node_save($node->platform_node);
+        node_save($node->platform_node);
       }
       $node->platform = $node->platform_node->nid;
+    }
+
+    // If db_server hasn't been explicity set, use hostmaster's web server.
+    if (!isset($node->platform_node->db_server)) {
+      $hostmaster = hosting_context_load('hostmaster');
+      $node->db_server = $hostmaster->db_server;
     }
   }
 
@@ -375,6 +381,10 @@ function hosting_site_update(&$node) {
       ))
       ->condition('vid', $node->vid)
       ->execute();
+    
+    if (isset($node->platform_node->nid)) {
+      node_save($node->platform_node);
+    }
   }
 }
 
@@ -394,9 +404,21 @@ function hosting_site_node_update($node) {
  */
 function hosting_site_load($nodes) {
   foreach ($nodes as $nid => &$node) {
-    $additions = db_query('SELECT  client, db_server, db_name, platform, profile, language as site_language, last_cron, cron_key, status AS site_status, verified FROM {hosting_site} WHERE vid = :vid', array(':vid' => $node->vid))->fetch();
+    $additions = db_query(
+      'SELECT  client, db_server, db_name, platform, profile, web_server, publish_path,
+        language AS site_language, last_cron, cron_key, s.status AS site_status,
+        p.status AS platform_status, s.verified, p.verified as platform_verified
+      FROM {hosting_site} s
+        LEFT JOIN {hosting_platform} p ON s.platform = p.nid
+      WHERE s.vid = :vid',
+      array(':vid' => $node->vid)
+    )->fetch();
     foreach ($additions as $property => &$value) {
       $node->$property = $value;
     }
   }
+
+  // Create a "servers" array based on our two base servers.
+  $node->servers['web'] = node_load($node->web_server);
+  $node->servers['db'] = node_load($node->db_server);
 }
