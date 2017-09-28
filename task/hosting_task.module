@@ -1878,6 +1878,10 @@ function hosting_task_views_post_execute(&$view) {
   // Parse Results on hosting_task_list view.
   if ($view->name == 'hosting_task_list') {
     foreach ($view->result as $i => &$result) {
+
+      // DEVELOPMENT: Uncomment to randomize task status.
+      // $result->hosting_task_task_status = rand(-1, 3);
+
       $result->status_class = hosting_task_status_class($result->hosting_task_task_status);
       $result->ref_url = url("node/$result->node_hosting_task_nid");
       $result->task_url = url("hosting/task/$result->nid");
