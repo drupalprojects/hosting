@@ -109,7 +109,7 @@ function hosting_alias_form_data(&$form, &$form_state) {
     '#suffix' => '</div>',
   );
   $form['aliases_wrapper']['aliases'] = array(
-    '#prefix' => '<div id="hosting-aliases">',
+    '#prefix' => '<div id="hosting-aliases"><label>' . t('Domain Aliases') . '</label>',
     '#suffix' => '</div>',
     '#tree' => TRUE,
    // '#theme' => 'hosting_alias_form',
@@ -493,7 +493,7 @@ function hosting_alias_settings($form, &$form_state) {
  * Validation handler for hosting_alias_settings form.
  */
 function hosting_alias_settings_validate($form, $form_state) {
-  if (!valid_url($form_state['values']['hosting_alias_subdomain'])) {
+  if (!empty($form_state['values']['hosting_alias_subdomain']) && !valid_url($form_state['values']['hosting_alias_subdomain'])) {
     form_set_error('hosting_alias_subdomain', t('The provided domain is invalid.'));
   }
 }
@@ -509,10 +509,18 @@ function hosting_alias_automatic_aliases($url) {
     }
   }
   if (!preg_match('/^www\./', $url) && variable_get('hosting_alias_automatic_www', FALSE)) {
-    $alias[] = "www." . $url;
+    $auto_alias = "www." . $url;
+    // Lookup DNS, only add if we get an IP back.
+    if (gethostbyname($auto_alias) != $auto_alias) {
+      $alias[] = $auto_alias;
+    }
   }
   elseif (preg_match('/^www\./', $url) && variable_get('hosting_alias_automatic_no_www', FALSE)) {
-    $alias[] = str_replace("www.", "", $url);
+    $auto_alias = str_replace("www.", "", $url);
+    // Lookup DNS, only add if we get an IP back.
+    if (gethostbyname($auto_alias) != $auto_alias) {
+      $alias[] = $auto_alias;
+    }
   }
   return $alias;
 }

@@ -53,11 +53,16 @@ function hosting_drush_command() {
     'arguments' => array(
       '@context_name' => 'Context to work on',
       'command' => 'provision-[command] to invoke',
+      'task_args' => 'If triggering tasks by context_name, any additional command arguments are passed as task_args. Specify the needed task_args in the format name=value.',
     ),
     'options' => array(
       'force' => array(
         'description' => 'Force the specified task to execute even if it is not queued to run.',
       ),
+    ),
+    'examples' => array(
+      'drush @hostmaster hosting-task @sitename.com backup "description=backup description"' => 'Run backup task on sitename.com with the description "backup description".',
+      'drush @hostmaster hosting-task 42 --verbose --force' => 'Run the task with ID 42.',
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_FULL,
   );

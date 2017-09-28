@@ -2,7 +2,6 @@
 /**
  * @file
  * Define the database schema and update functions for the hosting_task module.
- *
  */
 
 /**
@@ -173,7 +172,7 @@ function hosting_task_update_6000() {
 
   $ret = hosting_package_update_6002();
 
-  // this update needs to be run before tasks can be added, in other update functions. 
+  // This update needs to be run before tasks can be added, in other update functions.
   if (!variable_get('hosting_task_update_6000_run', FALSE)) {
     db_add_field($ret, 'hosting_task', 'delta', array('type' => 'int', 'not null' => TRUE, 'default' => 0));
     variable_set('hosting_task_update_6000_run', TRUE);
@@ -328,9 +327,19 @@ function hosting_task_update_7000() {
 }
 
 /**
- * Install timeago and libraries module and set the default format for the hosting_timeago date type.
+ * Grant aegir clients 'create login-reset task' permission.
  */
 function hosting_task_update_7001() {
+  $role = user_role_load_by_name('aegir client');
+  if ($role) {
+    user_role_grant_permissions($role->rid, array('create login-reset task'));
+  }
+}
+
+/**
+ * Install timeago and libraries module and set the default format for the hosting_timeago date type.
+ */
+function hosting_task_update_7002() {
   module_enable(array('timeago', 'libraries'));
   variable_set('date_format_hosting_timeago', '<\s\p\a\n \c\l\a\s\s="\t\i\m\e\a\g\o" \t\i\t\l\e="c">n/j/y - g:ia</\s\p\a\n>');
 }
