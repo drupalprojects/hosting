@@ -245,5 +245,5 @@ function hosting_task_process($command, $cwd = null, $env = array(), $log_output
   
   drush_log("[Process Stop] $command", 'process_stop');
   
-  return $process->getOutput();
+  return $process->getOutput() . $process->getErrorOutput();
 }
