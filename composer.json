@@ -1,5 +1,6 @@
 {
     "require": {
-        "symfony/process": "^3.3"
+        "symfony/process": "^3.3",
+        "sensiolabs/ansi-to-html": "^1.1"
     }
 }

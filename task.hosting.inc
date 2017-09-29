@@ -231,11 +231,7 @@ function hosting_task_process($command, $cwd = null, $env = array(), $log_output
   $process->setTimeout(NULL);
   if ($log_output) {
     $exit_code = $process->run(function ($type, $buffer) {
-      if (Process::ERR === $type) {
-        drush_log($buffer, 'process_error');
-      } else {
         drush_log($buffer, 'process');
-      }
     });
   }
   else {

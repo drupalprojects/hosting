@@ -1206,7 +1206,7 @@ function _hosting_task_log_table($node, $last_position = 0) {
     $exec_time = '';
     $row_count = -1;
     foreach ($result as $entry) {
-      if (strlen($entry->message) > 300) {
+      if ($entry->type != 'process' && strlen($entry->message) > 300) {
         $summary = "<span class='hosting-task-summary'>" . filter_xss(substr($entry->message, 0, 75), array()) . "... <a href='javascript:void(0)' class='hosting-summary-expand modalframe-exclude'>(" . t('Expand') . ')</a></span>';
         $message = $summary . "<span class='hosting-task-full'>" . filter_xss($entry->message) . '</span>';
       }
@@ -1244,17 +1244,21 @@ function _hosting_task_log_table($node, $last_position = 0) {
 
       $row_count++;
       $last_timestamp = $entry->timestamp;
+      
+      if ($entry->type == 'process') {
+        $message = hosting_task_ascii($message);
+      }
 
       $row = array(
         array(
           'data' => $message,
-          'class' => array('hosting-status'),
+          'class' => array('hosting-status', 'hosting-log-' . $entry->type),
         ),
       );
 
       $rows[] = array(
         'data' => $row,
-        'class' => array(_hosting_task_log_class($entry->type)),
+        'class' => array(_hosting_task_log_class($entry->type), 'hosting-log-' . $entry->type),
       );
 
       // Record that we've seen this log row.
@@ -1962,4 +1966,38 @@ function hosting_task_entity_property_info_alter(&$info) {
     'setter callback' => 'entity_property_verbatim_set',
   );
   */
+}
+
+use SensioLabs\AnsiConverter\Theme\SolarizedXTermTheme;
+use SensioLabs\AnsiConverter\AnsiToHtmlConverter;
+
+/**
+ * Output pretty console themed ASCII.
+ */
+function hosting_task_ascii($string) {
+  if (empty($string)) {
+    return $string;
+  }
+  
+  // Prepare ASCII Converter
+  $theme = new SolarizedXTermTheme();
+  $styles = $theme->asCss();
+  $styles .= ".ansi_box { overflow: auto; padding: 10px 15px; font-family: monospace; }";
+  
+  drupal_add_html_head("<style>$styles</style>");
+  $converter = new AnsiToHtmlConverter($theme);
+  $output = $converter->convert($string);
+  
+  // Make URLs clickable:
+  $output = _filter_url($output);
+  
+  // Change linebreaks to <br> tags.
+  $output = strtr($output, array(
+    '\n' => '<br />',
+  ));
+  
+  return <<<HTML
+  <pre class="hosting-task-ascii">$output</pre>
+HTML;
+
 }

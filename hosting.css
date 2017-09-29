@@ -141,6 +141,25 @@ tr.hosting-warning .hosting-status,
 
 tr.hosting-info .hosting-status { background-image: url(images/icon-notice.png); }
 
+tr.hosting-info .hosting-status.hosting-log-process {
+  background-image: none;
+}
+.hosting-task-ascii,
+table.hosting-table tr.hosting-info.hosting-log-process
+ {
+  background-color: #262626 !important;
+}
+table.hosting-table td.hosting-log-process
+ {
+  padding: 0;
+  border-top: 0;
+  padding-left: 0 !important;
+}
+
+table.hosting-table td.hosting-log-process .hosting-task-ascii {
+  padding: 0 1em;
+}
+
 tr.hosting-queue .hosting-status,
 td.hosting-package-same {
   background-image: url(images/icon-queue.png);
