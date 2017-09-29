@@ -5,6 +5,8 @@
  * Drush include for the Hosting module's hosting task command.
  */
 
+use Symfony\Component\Process\Process;
+
 /**
  * Log a message to the current task's node if possible, the screen otherwise.
  */
@@ -155,8 +157,18 @@ function drush_hosting_task() {
     $alias = $task->ref->hosting_name;
   }
 
-  // Run the actual command. Adding alias here to work around Drush API.
-  $output = provision_backend_invoke($alias, 'provision-' . $task->task_type, $task->args, $task->options, $mode);
+  // Run the actual command.
+  $site_record = drush_sitealias_get_record('@' . $alias);
+  $task->options['strict'] = 0;
+  
+  // Filter out arguments that are actually options.
+  $arguments = array_diff_key($task->task_args, $task->options);
+  drush_log("Arguments: " . print_r($arguments, 1), 'ok');
+  
+  $cmd = _drush_backend_generate_command($site_record, "drush @$alias provision-{$task->task_type}", $arguments, $task->options);
+  
+  hosting_task_process($cmd);
+  
   // Pass the drush output back to the HOOK_post_hosting_TASK_task() and
   // HOOK_hosting_TASK_task_rollback() hooks, as the $data argument.
   drush_set_context('HOSTING_DRUSH_OUTPUT', $output);
@@ -195,4 +207,47 @@ function drush_hosting_post_hosting_task($task) {
   $hook = sprintf("post_hosting_%s_task", str_replace('-', '_', $task->task_type));
   drush_log(dt('Invoking :hook hooks.', array(':hook' => $hook)));
   module_invoke_all($hook, $task, drush_get_context('HOSTING_DRUSH_OUTPUT'));
+}
+
+/**
+ * Run a Symfony Process saving to drush logs.
+ */
+function hosting_task_process($command, $cwd = null, $env = array(), $log_output = TRUE, $error_message = 'Process Failed') {
+  
+  drush_log("[Process Start] $command", 'process_start');
+  
+  // Merge in env vars, inheriting the CLI's
+  if (is_array($env)) {
+    $env = array_merge($_SERVER, $env);
+  }
+  else {
+    $env = $_SERVER;
+  }
+  
+  // Make sure colors always come through
+  $env['TERM'] = 'xterm';
+  
+  $process = new Process(escapeshellcmd($command), $cwd, $env);
+  $process->setTimeout(NULL);
+  if ($log_output) {
+    $exit_code = $process->run(function ($type, $buffer) {
+      if (Process::ERR === $type) {
+        drush_log($buffer, 'process_error');
+      } else {
+        drush_log($buffer, 'process');
+      }
+    });
+  }
+  else {
+    $exit_code = $process->run();
+  }
+  
+  // check exit code
+  if ($exit_code !== 0) {
+    drush_set_error('PROVISION_PROCESS_ERROR', dt($error_message));
+  }
+  
+  drush_log("[Process Stop] $command", 'process_stop');
+  
+  return $process->getOutput();
 }
