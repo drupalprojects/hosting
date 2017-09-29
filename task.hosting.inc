@@ -167,7 +167,7 @@ function drush_hosting_task() {
   
   $cmd = _drush_backend_generate_command($site_record, "drush @$alias provision-{$task->task_type}", $arguments, $task->options);
   
-  hosting_task_process($cmd);
+  $output = hosting_task_process($cmd);
   
   // Pass the drush output back to the HOOK_post_hosting_TASK_task() and
   // HOOK_hosting_TASK_task_rollback() hooks, as the $data argument.
