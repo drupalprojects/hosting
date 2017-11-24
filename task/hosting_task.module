@@ -1515,7 +1515,7 @@ function hosting_task_table($node) {
   $settings['hostingTasks']['availableTasks'] = $tasks;
   drupal_add_js($settings, 'setting');
   drupal_add_js(drupal_get_path('module', 'hosting_task') . '/hosting_task.js');
-  drupal_add_js('https://npmcdn.com/vue/dist/vue.js', 'external');
+  libraries_load('vuejs');
   timeago_add_js();
   return theme('hosting_task_table', array('tasks' => $tasks));
 }
@@ -1865,7 +1865,7 @@ function hosting_task_preprocess_page(&$variables) {
 
   drupal_add_js($settings, 'setting');
   drupal_add_js(drupal_get_path('module', 'hosting_task') . '/hosting_task.js');
-  drupal_add_js('https://npmcdn.com/vue/dist/vue.js', 'external');
+  libraries_load('vuejs');
   timeago_add_js();
 }
 
@@ -2096,4 +2096,26 @@ function hosting_task_theme($existing, $type, $theme, $path) {
     ),
   );
   return $theme;
+}
+
+/**
+ * Implements hook_libraries_info().
+ */
+function hosting_task_libraries_info() {
+  return array(
+    'vuejs' => array(
+      'name' => t('Vue JS'),
+      'vendor url' => 'https://vuejs.org/',
+      'download url' => 'https://github.com/vuejs/vue/raw/v2.4.4/dist/vue.min.js',
+      'version arguments' => array(
+        'file' => 'vue.min.js',
+        'pattern' => '/ * Vue.js v(.*)/', // e.g.  * Vue.js v2.4.4
+      ),
+      'files' => array(
+        'js' => array(
+          'vue.min.js',
+        ),
+      ),
+    ),
+  );
 }
