@@ -11,7 +11,7 @@ function hosting_hosting_platform_context_options(&$task) {
   $task->context_options['server'] = '@server_master';
   $task->context_options['web_server'] = hosting_context_name($task->ref->web_server);
   // Trim the path so we dont pass extra spaces.
-  $task->context_options['root'] = trim($task->ref->publish_path, " ");
+  $task->context_options['publish_path'] = trim($task->ref->publish_path, " ");
   if ($task->ref->makefile) {
     $task->context_options['makefile'] = $task->ref->makefile;
   }
