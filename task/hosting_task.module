@@ -2048,9 +2048,13 @@ function hosting_task_ascii($string) {
   $output = $converter->convert($string);
   
   // Make URLs clickable:
-  $output = _filter_url($output);
-  
-  // Change linebreaks to <br> tags.
+  $filter = new stdClass();
+  $filter->settings = [
+    'filter_url_length' => 1000,
+  ];
+  $output = _filter_url($output, $filter);
+
+    // Change linebreaks to <br> tags.
   $output = strtr($output, array(
     '\n' => '<br />',
   ));
