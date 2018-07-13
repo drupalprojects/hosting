@@ -304,7 +304,7 @@ function hosting_site_insert(&$node) {
     }
 
     // If db_server hasn't been explicity set, use hostmaster's web server.
-    if (!isset($node->platform_node->db_server)) {
+    if (!isset($node->db_server)) {
       $hostmaster = hosting_context_load('hostmaster');
       $node->db_server = $hostmaster->db_server;
     }
@@ -415,7 +415,7 @@ function hosting_site_load($nodes) {
       array(':vid' => $node->vid)
     )->fetch();
     foreach ($additions as $property => &$value) {
-      $node->$property = $value;
+      $node->$property = is_numeric($value) ? (int) $value : $value;
     }
   }
 

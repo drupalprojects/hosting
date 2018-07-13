@@ -650,7 +650,8 @@ function hosting_supporting_aegir_block() {
 
       <p>If you feel that Aegir has added significant value to your business or endeavour, please consider donating!</p>
       <p><strong>How much is Aegir worth to you?</strong></p>
-      <a href=\"http://www.aegirproject.org/donate\" target=_blank>Donate Now ... </a>
+      <a href=\"http://www.aegirproject.org/#support\" target=_blank>Donate Now ... </a>
+      <a href=\"http://www.aegirproject.org/#support\" target=_blank>or get more info.</a>
 
       <footer style=\"font-size: smaller;\">This block is only displayed to you, the superuser.</footer>
       ";
@@ -1311,6 +1312,12 @@ function hosting_settings($form, &$form_state) {
     '#description' => t('Check if you wish for users to run the Disable task on a site prior to running the Delete task.'),
     '#default_value' => variable_get('hosting_require_disable_before_delete', TRUE),
   );
+  $form['hosting_delete_force'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Force sites, platforms, and servers to be removed when running the Delete task.'),
+    '#description' => t('If something goes wrong when deleting a site, platform, or server, the task will fail. Check this box to force contexts to be removed when Delete tasks are run.'),
+    '#default_value' => variable_get('hosting_delete_force', FALSE),
+  );
   if (hosting_feature('cron')) {
     $form['hosting_cron_use_backend'] = array(
       '#type' => 'radios',
@@ -1320,6 +1327,20 @@ function hosting_settings($form, &$form_state) {
       '#default_value' => variable_get('hosting_cron_use_backend', TRUE),
     );
   }
+
+  $types = implode(' ', db_query('SELECT type FROM {hosting_task_log} GROUP BY type ORDER BY type')->fetchCol());
+  if (empty($types)) {
+    $types = 'error warning info message notice ok status success warning';
+  }
+  $form['hosting_task_logs_types_display'] = array(
+    '#type' => 'textarea',
+    '#title' => t('Task Logs to Display'),
+    '#description' => t('Enter the types of logs you wish to show to the user, separated by spaces. Use the special type "ALL" to get any type. Available log types are: %types', array(
+      '%types' => $types,
+    )),
+    '#rows' => 2,
+    '#default_value' => variable_get('hosting_task_logs_types_display', 'ALL'),
+  );
   return system_settings_form($form);
 }
 

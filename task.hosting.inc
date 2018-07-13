@@ -60,7 +60,8 @@ function drush_hosting_task_validate($id, $type = NULL) {
       $task_args = array();
 
       // Parse task_arguments passed to drush in the format "name=value"
-      $drush_args = array_splice(func_get_args(), 2);
+      $arguments = func_get_args();
+      $drush_args = array_splice($arguments, 2);
       foreach ($drush_args as $i => $arg) {
         list($name, $value) = explode('=', $arg);
         $task_args[$name] = $value;
@@ -157,6 +158,7 @@ function drush_hosting_task() {
     $alias = $task->ref->hosting_name;
   }
 
+//<<<<<<< HEAD
   // Run the actual command.
   $site_record = drush_sitealias_get_record('@' . $alias);
   $task->options['strict'] = 0;
@@ -168,7 +170,14 @@ function drush_hosting_task() {
   $cmd = _drush_backend_generate_command($site_record, "drush @$alias provision-{$task->task_type}", $arguments, $task->options);
   
   $output = hosting_task_process($cmd);
-  
+
+// @TODO: Remove this.
+//  if (!isset($task->task_command)) {
+//    $task->task_command = 'provision-' . $task->task_type;
+//  }
+//  // Run the actual command. Adding alias here to work around Drush API.
+//  $output = provision_backend_invoke($alias, $task->task_command, $task->args, $task->options, $mode);
+
   // Pass the drush output back to the HOOK_post_hosting_TASK_task() and
   // HOOK_hosting_TASK_task_rollback() hooks, as the $data argument.
   drush_set_context('HOSTING_DRUSH_OUTPUT', $output);
